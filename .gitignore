@@ -1,0 +1,40 @@
+# Sensitive configuration files
+includes/config.php
+
+# Upload directories
+uploads/
+admin/uploads/
+
+# Error logs
+error_log
+*.log
+how_debug.log
+admin/error_log
+
+# Database dumps (optional - remove if you want to include)
+*.sql
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+php_router.php
+
+# Node modules (if any)
+node_modules/
+
+# Environment files
+.env
+.env.local
+

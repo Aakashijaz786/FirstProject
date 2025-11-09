@@ -1,0 +1,193 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('tiktok_form');
+    const input = document.getElementById('main_page_text');
+    const loader = document.getElementById('main_loader');
+    const errorContainer = document.getElementById('errorContainer');
+    const downloadOptions = document.getElementById('downloadOptions');
+    const pasteBtn = document.getElementById('paste');
+
+    // Add paste functionality
+    if (pasteBtn && navigator.clipboard) {
+        pasteBtn.addEventListener('click', async function() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    input.value = text;
+                    input.focus();
+                } else {
+                    errorContainer.innerHTML = '<div class="alert alert-warning mt-3">Clipboard is empty.</div>';
+                }
+            } catch (err) {
+                errorContainer.innerHTML = '<div class="alert alert-danger mt-3">Unable to read clipboard. Please allow clipboard permissions.</div>';
+            }
+        });
+    }
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        errorContainer.innerHTML = '';
+        downloadOptions.style.display = 'none';
+        downloadOptions.innerHTML = '';
+        console.log('Form submit - showing loader...');
+        loader.style.display = 'block';
+        loader.style.visibility = 'visible';
+        const url = input.value.trim();
+        if (!url) {
+            errorContainer.innerHTML = '<div class="alert alert-danger mt-3">Please enter a TikTok link.</div>';
+            loader.style.display = 'none';
+            return;
+        }
+        const formData = new FormData();
+        formData.append('page', url);
+        formData.append('ajax', '1');
+        fetch('', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            loader.style.display = 'none';
+            if (data.error) {
+                errorContainer.innerHTML = '<div class="alert alert-danger mt-3">' + data.error + '</div>';
+            } else if (data.success && data.links) {
+                let resultHtml = `
+  <div class="result u-shadow--black" id="mainpicture">
+    <div class="result_overlay pure-g">
+      <div class="pure-u-1 pure-u-sm-1-2" id="avatarAndTextUsual">
+        <!-- Video or image preview here -->
+        <video src="${data.links['Video (No Watermark)']}" controls style="width:100%;border-radius:12px;height: 270px;"></video>
+        <!-- Or use <img src="..." /> if you want a cover image -->
+        <div>
+          <h2>${data.desc}</h2>
+          <p class="maintext">${data.desc}</p>
+        </div>
+      </div>
+      <div class="flex-1 result_overlay_buttons pure-u-1 pure-u-sm-1-2" id="dl_btns">
+        <div class="mobile-desktop" style="display:contents;flex-direction:column;gap:12px;">
+          ${Object.entries(data.links).map(([label, link]) => 
+            link ? `<button class="btn download-btn" data-link="/download_proxy.php?url=${encodeURIComponent(link)}" data-label="${label}">${label}</button>` : ''
+          ).join('')}
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+document.getElementById('target').innerHTML = resultHtml;
+document.getElementById('tiktok_form').style.display = 'none';
+
+// Assume you have the TikTok URL stored in a variable
+let lastTikTokUrl = ''; // Set this when the user submits the form
+
+// When you display the result, set lastTikTokUrl
+lastTikTokUrl = url;
+
+// Attach event listeners to download buttons
+document.querySelectorAll('#target .download-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const label = this.getAttribute('data-label');
+    if (!lastTikTokUrl) {
+      alert('No TikTok URL found.');
+      return;
+    }
+
+    // Store original button text and disable button
+    const originalText = this.innerHTML;
+    this.disabled = true;
+    this.innerHTML = '<div style="width: 16px; height: 16px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>';
+
+    // Request a fresh link for the selected type
+    const formData = new FormData();
+    formData.append('page', lastTikTokUrl);
+    formData.append('ajax', '1');
+    formData.append('type', label);
+
+    fetch('', {
+      method: 'POST',
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.links && data.links[label]) {
+        const downloadUrl = data.links[label];
+        
+        // First, get file metadata (size, filename)
+        fetch('/download_proxy.php?url=' + encodeURIComponent(downloadUrl) + '&metadata=1')
+        .then(res => res.json())
+        .then(metadata => {
+          if (metadata.success) {
+            // Update button to show file size and download status
+            this.innerHTML = `<div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+              <div style="width: 16px; height: 16px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+              <div style="font-size: 10px; color: #fff; text-align: center;">
+                <div>${metadata.sizeFormatted}</div>
+                <div style="font-size: 8px; opacity: 0.8;">Downloading...</div>
+              </div>
+            </div>`;
+            
+            // Start the actual download
+            const proxyUrl = '/download_proxy.php?url=' + encodeURIComponent(downloadUrl) + '&_t=' + Date.now();
+            const a = document.createElement('a');
+            a.href = proxyUrl;
+            a.download = metadata.filename || '';
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            // Restore button after download starts
+            setTimeout(() => {
+              this.innerHTML = originalText;
+              this.disabled = false;
+            }, 2000);
+          } else {
+            // Fallback if metadata fetch fails
+            const proxyUrl = '/download_proxy.php?url=' + encodeURIComponent(downloadUrl) + '&_t=' + Date.now();
+            const a = document.createElement('a');
+            a.href = proxyUrl;
+            a.download = '';
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            this.innerHTML = originalText;
+            this.disabled = false;
+          }
+        })
+        .catch(() => {
+          // Fallback if metadata fetch fails
+          const proxyUrl = '/download_proxy.php?url=' + encodeURIComponent(downloadUrl) + '&_t=' + Date.now();
+          const a = document.createElement('a');
+          a.href = proxyUrl;
+          a.download = '';
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          
+          this.innerHTML = originalText;
+          this.disabled = false;
+        });
+      } else {
+        alert('Download link not available. Please try again.');
+        // Restore button on error
+        this.innerHTML = originalText;
+        this.disabled = false;
+      }
+    })
+    .catch(() => {
+      alert('An error occurred. Please try again.');
+      // Restore button on error
+      this.innerHTML = originalText;
+      this.disabled = false;
+    });
+  });
+});
+            }
+        })
+        .catch(() => {
+            loader.style.display = 'none';
+            errorContainer.innerHTML = '<div class="alert alert-danger mt-3">An error occurred. Please try again.</div>';
+        });
+    });
+});

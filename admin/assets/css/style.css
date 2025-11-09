@@ -1,0 +1,324 @@
+body {
+    background: #f4f6fa;
+}
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 250px;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #fff;
+    transition: width 0.2s;
+    z-index: 1000;
+}
+.sidebar.collapsed {
+    width: 70px;
+}
+.sidebar .sidebar-header {
+    padding: 1.5rem 1.2rem 1rem 1.2rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: rgba(255,255,255,0.05);
+    text-align: center;
+}
+.sidebar .nav-link {
+    color: #fff;
+    font-weight: 500;
+    padding: 0.9rem 1.5rem;
+    transition: background 0.2s, color 0.2s;
+    border-radius: 0 2rem 2rem 0;
+    margin-bottom: 0.2rem;
+}
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+    background: rgba(255,255,255,0.12);
+    color: #ffc107;
+}
+.sidebar .nav-link i {
+    margin-right: 1rem;
+    min-width: 20px;
+    text-align: center;
+}
+.sidebar.collapsed .nav-link span {
+    display: none;
+}
+.sidebar.collapsed .sidebar-header {
+    font-size: 1.2rem;
+    padding: 1.5rem 0.5rem 1rem 0.5rem;
+}
+.sidebar.collapsed .nav-link {
+    text-align: center;
+    padding: 0.9rem 0.5rem;
+}
+.sidebar .dropdown-menu {
+    background: #2a5298;
+    border: none;
+}
+.sidebar .dropdown-item {
+    color: #fff;
+}
+.sidebar .dropdown-item:hover {
+    background: #1e3c72;
+    color: #ffc107;
+}
+.sidebar-toggle {
+    position: absolute;
+    top: 18px;
+    right: -18px;
+    background: #fff;
+    color: #2a5298;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(30,60,114,0.15);
+    cursor: pointer;
+    border: none;
+    z-index: 1100;
+}
+.main-content {
+    margin-left: 250px;
+    padding: 2.5rem 2rem 2rem 2rem;
+    transition: margin-left 0.2s;
+}
+.sidebar.collapsed ~ .main-content {
+    margin-left: 70px;
+}
+@media (max-width: 768px) {
+    .sidebar {
+        width: 70px;
+    }
+    .main-content {
+        margin-left: 70px;
+        padding: 1rem;
+    }
+}
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px rgba(30,60,114,0.08);
+}
+.card .card-body {
+    display: flex;
+    align-items: center;
+}
+.card-icon {
+    font-size: 2.5rem;
+    margin-right: 1.5rem;
+    color: #2a5298;
+}
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #888;
+}
+.card-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e3c72;
+}
+/* Language Table Styles */
+.table thead th {
+    color: #0a2540;
+    font-weight: 700;
+    background: #fff;
+    border-bottom: 2px solid #e9ecef;
+}
+.table tbody tr {
+    background: #f7f8fa;
+}
+.table tbody tr td {
+    vertical-align: middle;
+    font-size: 1.05rem;
+}
+.btn-add-language {
+    background: #006cff;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    box-shadow: 0 2px 8px rgba(0,108,255,0.08);
+    transition: background 0.2s;
+}
+.btn-add-language:hover {
+    background: #0056c7;
+    color: #fff;
+}
+.icon-action {
+    font-size: 1.3rem;
+    cursor: pointer;
+    margin-right: 0.7rem;
+}
+.icon-action.edit { color: #ffc107; }
+.icon-action.delete { color: #ff4d4f; margin-right: 0; }
+.icon-action.pages { color: #22c55e; }
+
+/*
+ * SnapTik Admin Custom Styles
+ * Move all inline and internal styles from admin pages here.
+ */  .footer-section {
+            background: #f7f8fa;
+            border-radius: 1.2rem;
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 1100px;
+            margin: 2rem auto;
+            box-shadow: 0 2px 16px rgba(30,60,114,0.06);
+        }
+        .footer-section h4 {
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        textarea.form-control {
+            font-family: 'Fira Mono', 'Consolas', 'Menlo', monospace;
+            font-size: 1.05rem;
+           
+            border-radius: 0.5rem;
+            min-height: 220px;
+            margin-bottom: 1.5rem;
+        }
+        .btn-primary {
+            background: #006cff;
+            border: none;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.6rem 2.2rem;
+        }
+        .btn-primary:hover {
+            background: #0056c7;
+        }
+          .header-section {
+            background: #f7f8fa;
+            border-radius: 1.2rem;
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 1100px;
+            margin: 2rem auto;
+            box-shadow: 0 2px 16px rgba(30,60,114,0.06);
+        }
+        .header-section h4 {
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+         .logo-favicon-section {
+            background: #f7f8fa;
+            border-radius: 1.2rem;
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 1100px;
+            margin: 2rem auto;
+            box-shadow: 0 2px 16px rgba(30,60,114,0.06);
+        }
+        .logo-favicon-section h4 {
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .form-control[type="file"] {
+            background: #fff;
+            border-radius: 0.5rem;
+        }
+        .file-name {
+            font-size: 0.95rem;
+            color: #2a5298;
+            margin-top: 0.2rem;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+        .robots-section {
+            background: #f7f8fa;
+            border-radius: 1.2rem;
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 1100px;
+            margin: 2rem auto;
+            box-shadow: 0 2px 16px rgba(30,60,114,0.06);
+        }
+        .robots-section h4 {
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+         .page-section {
+            background: #f7f8fa;
+            border-radius: 1.2rem;
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 900px;
+            margin: 2rem auto;
+            box-shadow: 0 2px 16px rgba(30,60,114,0.06);
+        }
+        .page-section h4 {
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #6c757d;
+        }
+        .form-control[readonly] {
+            background: #e9ecef;
+        }
+        .note-editor.note-frame {
+            border-radius: 0.5rem;
+        }
+        .url-preview {
+            font-size: 0.98rem;
+            color: #2a5298;
+            margin-bottom: 1.2rem;
+        }
+          .faq-row {
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1.2rem;
+            margin-bottom: 1.2rem;
+        }
+        .remove-faq-btn {
+            color: #ff4d4f;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: 0.5rem;
+        }
+          .page-cards-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: flex-start;
+        }
+        .page-card {
+            background: #fff;
+            border-radius: 1.2rem;
+            box-shadow: 0 2px 16px rgba(30,60,114,0.08);
+            width: 160px;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: box-shadow 0.2s, transform 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .page-card:hover {
+            box-shadow: 0 6px 32px rgba(30,60,114,0.15);
+            transform: translateY(-4px) scale(1.03);
+        }
+        .page-card .page-icon {
+            color: #22c55e;
+            font-size: 3rem;
+            margin-bottom: 0.7rem;
+        }
+        .page-card .page-label {
+            color: #22c55e;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+        }
+        @media (max-width: 900px) {
+            .page-cards-row { gap: 1rem; }
+            .page-card { width: 120px; height: 120px; }
+            .page-card .page-icon { font-size: 2rem; }
+        }
