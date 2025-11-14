@@ -55,12 +55,29 @@ if ($result && $result->num_rows > 0) {
 }
 
 // Get recent downloads count (last 100)
-$recent_downloads_count = 0;
-$sql = "SELECT COUNT(*) as recent FROM downloads ORDER BY download_time DESC LIMIT 100";
+$recent_downloads = [];
+$sql = "SELECT url, download_time, ip_address, country, file_name, file_type, file_size_bytes, provider_key 
+        FROM downloads 
+        ORDER BY download_time DESC 
+        LIMIT 25";
 $result = $conn->query($sql);
 if ($result && $result->num_rows > 0) {
-    $row = $result->fetch_assoc();
-    $recent_downloads_count = $row['recent'];
+    while ($row = $result->fetch_assoc()) {
+        $recent_downloads[] = $row;
+    }
+}
+
+function formatBytesAdmin($bytes) {
+    if (!$bytes || $bytes <= 0) {
+        return '0 B';
+    }
+    $units = ['B', 'KB', 'MB', 'GB'];
+    $i = 0;
+    while ($bytes >= 1024 && $i < count($units) - 1) {
+        $bytes /= 1024;
+        $i++;
+    }
+    return number_format($bytes, 2) . ' ' . $units[$i];
 }
 ?>
 <?php
@@ -145,6 +162,44 @@ include 'includes/header.php';
                 <!--</div>-->
             </div>
             <!-- More dashboard content can go here -->
+
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Recent Downloads</span>
+                </div>
+                <div class="card-body table-responsive">
+                    <?php if (empty($recent_downloads)): ?>
+                        <p class="text-muted mb-0">No downloads recorded yet.</p>
+                    <?php else: ?>
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Country</th>
+                                    <th>IP</th>
+                                    <th>File</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Provider</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recent_downloads as $download): ?>
+                                    <tr>
+                                        <td><?php echo date('Y-m-d H:i', strtotime($download['download_time'])); ?></td>
+                                        <td><?php echo htmlspecialchars($download['country']); ?></td>
+                                        <td><?php echo htmlspecialchars($download['ip_address']); ?></td>
+                                        <td><?php echo htmlspecialchars($download['file_name'] ?: basename($download['url'])); ?></td>
+                                        <td><?php echo htmlspecialchars($download['file_type'] ?: 'N/A'); ?></td>
+                                        <td><?php echo formatBytesAdmin($download['file_size_bytes']); ?></td>
+                                        <td><?php echo strtoupper($download['provider_key'] ?? '-'); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
   <?php

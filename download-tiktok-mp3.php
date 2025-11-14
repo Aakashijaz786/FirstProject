@@ -8,6 +8,19 @@ if ($res && $res->num_rows > 0) {
     $site_url = rtrim($row['site_url'], '/');
 }
 
+http_response_code(410);
+include 'includes/header.php';
+include 'includes/navigation.php';
+?>
+<main class="container py-5">
+    <div class="alert alert-warning">
+        The legacy MP3 downloader is no longer available. Please use the new FastAPI-powered workflow on the homepage.
+    </div>
+</main>
+<?php
+include 'includes/footer.php';
+exit;
+
 // Handle trailing slash redirects - add this at the very top of each file (after <?php)
 if (substr($_SERVER['REQUEST_URI'], -1) === '/') {
     // Remove trailing slash and redirect immediately

@@ -57,6 +57,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a class="nav-link <?= ($current_page == 'api.php') ? 'active' : '' ?>" href="api.php">
             <i class="fas fa-robot"></i> <span>API Settings</span>
         </a>
+        <a class="nav-link <?= ($current_page == 'ads.php') ? 'active' : '' ?>" href="ads.php">
+            <i class="fas fa-ad"></i> <span>Advertisements</span>
+        </a>
         <a class="nav-link" href="logout.php">
             <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
         </a>

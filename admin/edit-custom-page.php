@@ -6,6 +6,16 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
 }
 require_once '../includes/config.php';
 
+$lock_message = 'Custom page editing is disabled. Manage active content from the new API workflow.';
+include 'includes/header.php';
+?>
+<div class="main-content" id="mainContent">
+    <div class="alert alert-warning m-4"><?php echo $lock_message; ?></div>
+</div>
+<?php
+include 'includes/footer.php';
+exit;
+
 // Handle translation request (AJAX) - MUST BE BEFORE ANY OTHER PROCESSING
 if (isset($_POST['translate_content'])) {
     header('Content-Type: application/json');

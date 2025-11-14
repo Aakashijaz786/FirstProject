@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const errorContainer = document.getElementById('errorContainer');
         const downloadOptions = document.getElementById('downloadOptions');
         const pasteBtn = document.getElementById('paste');
-    
+        const useFastApiFlow = form && form.dataset.fastapi === '1';
+
         // Add paste functionality
         if (pasteBtn && navigator.clipboard) {
             pasteBtn.addEventListener('click', async function() {
@@ -24,7 +25,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    
+
+        if (useFastApiFlow && form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                errorContainer.innerHTML = '';
+                const query = input ? input.value.trim() : '';
+                if (!query) {
+                    errorContainer.innerHTML = '<div class="alert alert-danger mt-3">Please enter a link or keyword.</div>';
+                    return;
+                }
+                const relay = document.createElement('form');
+                relay.method = 'POST';
+                relay.action = form.getAttribute('action') || '/search.php';
+                relay.style.display = 'none';
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'query';
+                hidden.value = query;
+                relay.appendChild(hidden);
+                document.body.appendChild(relay);
+                relay.submit();
+            });
+            return;
+        }
+
             // Function to log download attempts
     function logDownloadAttempt(url, downloadType) {
         const formData = new FormData();

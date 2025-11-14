@@ -225,6 +225,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['translate_content'])
     $description1_2 = processEditorContent($_POST['description1_2'] ?? '');
     $title2_2 = trim(strip_tags($_POST['title2_2'] ?? ''));
     $description2_2 = processEditorContent($_POST['description2_2'] ?? '');
+    // FAQs (enable + items)
+    $faqs_enabled = isset($_POST['faqs_enabled']) ? 1 : 0;
+    $faq_questions = $_POST['faq_question'] ?? [];
+    $faq_answers = $_POST['faq_answer'] ?? [];
+    $faqs = [];
+    $faq_count = max(count($faq_questions), count($faq_answers));
+    for ($i = 0; $i < $faq_count; $i++) {
+        $q = isset($faq_questions[$i]) ? trim(strip_tags($faq_questions[$i])) : '';
+        $a = isset($faq_answers[$i]) ? processEditorContent($faq_answers[$i]) : '';
+        if ($q !== '' || $a !== '') {
+            $faqs[] = ['q' => $q, 'a' => $a];
+        }
+    }
+    $faqs_json = json_encode($faqs);
     // Handle dynamic columns
     $add_column_headings = $_POST['add_column_heading'] ?? [];
     $add_column_descriptions = $_POST['add_column_description'] ?? [];
@@ -348,7 +362,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['translate_content'])
     if ($res && $res->num_rows > 0) {
         // Update
         $sql = sprintf(
-            "UPDATE languages_home SET page_name='%s', slug='%s', direction='%s', meta_title='%s', meta_description='%s', header='%s', title1='%s', description1='%s', title2='%s', description2='%s', title3='%s', description3='%s', heading2='%s', heading2_description='%s', how_to_download_heading='%s', description_bottom='%s', image='%s', image_description='%s', title1_2='%s', pink_title1_2='%s', description1_2='%s', image1='%s', title2_2='%s', description2_2='%s', image2='%s', add_columns='%s', images='%s' WHERE language_id=%d",
+            "UPDATE languages_home SET page_name='%s', slug='%s', direction='%s', meta_title='%s', meta_description='%s', header='%s', title1='%s', description1='%s', title2='%s', description2='%s', title3='%s', description3='%s', heading2='%s', heading2_description='%s', how_to_download_heading='%s', description_bottom='%s', image='%s', image_description='%s', title1_2='%s', pink_title1_2='%s', description1_2='%s', image1='%s', title2_2='%s', description2_2='%s', image2='%s', add_columns='%s', images='%s', faqs_enabled=%d, faqs='%s' WHERE language_id=%d",
             $conn->real_escape_string($page_name),
             $conn->real_escape_string($slug),
             $conn->real_escape_string($direction),
@@ -376,6 +390,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['translate_content'])
             $conn->real_escape_string($image2),
             $conn->real_escape_string($add_columns_json),
             $conn->real_escape_string($images_json),
+            $faqs_enabled,
+            $conn->real_escape_string($faqs_json),
             $lang_id
         );
         if ($conn->query($sql)) {
@@ -386,7 +402,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['translate_content'])
     } else {
         // Insert
         $sql = sprintf(
-            "INSERT INTO languages_home (language_id, page_name, slug, direction, meta_title, meta_description, header, title1, description1, title2, description2, title3, description3, heading2, heading2_description, how_to_download_heading, description_bottom, image, image_description, title1_2, pink_title1_2, description1_2, image1, title2_2, description2_2, image2, add_columns, images) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')",
+            "INSERT INTO languages_home (language_id, page_name, slug, direction, meta_title, meta_description, header, title1, description1, title2, description2, title3, description3, heading2, heading2_description, how_to_download_heading, description_bottom, image, image_description, title1_2, pink_title1_2, description1_2, image1, title2_2, description2_2, image2, add_columns, images, faqs_enabled, faqs) VALUES (%d, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', %d, '%s')",
             $lang_id,
             $conn->real_escape_string($page_name),
             $conn->real_escape_string($slug),
@@ -414,7 +430,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['translate_content'])
             $conn->real_escape_string($description2_2),
             $conn->real_escape_string($image2),
             $conn->real_escape_string($add_columns_json),
-            $conn->real_escape_string($images_json)
+            $conn->real_escape_string($images_json),
+            $faqs_enabled,
+            $conn->real_escape_string($faqs_json)
         );
         if ($conn->query($sql)) {
             $success = 'Home page added.';
@@ -791,6 +809,51 @@ foreach ($redirects as $slug => $info) {
             </div>
         </form>
     </div>
+    <!-- FAQs Section -->
+    <div class="page-section mt-5">
+        <h4>FAQs (Home Page)</h4>
+        <hr>
+        <form method="post">
+            <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="faqs_enabled" name="faqs_enabled" <?php echo !empty($page['faqs_enabled']) ? 'checked' : ''; ?>>
+                <label class="form-check-label" for="faqs_enabled">Enable FAQs on homepage</label>
+            </div>
+            <div id="faq-wrapper">
+                <?php 
+                $faqs_list = [];
+                if (!empty($page['faqs'])) {
+                    $faqs_list = is_array($page['faqs']) ? $page['faqs'] : json_decode($page['faqs'], true);
+                } elseif (!empty($english_page['faqs'])) {
+                    $faqs_list = json_decode($english_page['faqs'], true);
+                }
+                if (!empty($faqs_list)): ?>
+                    <?php foreach ($faqs_list as $idx => $faq): ?>
+                        <div class="faq-item border rounded p-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>FAQ <?php echo $idx + 1; ?></strong>
+                                <button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>
+                            </div>
+                            <input type="text" class="form-control mb-2" name="faq_question[]" placeholder="Question" value="<?php echo htmlspecialchars($faq['q'] ?? ''); ?>">
+                            <textarea class="form-control" name="faq_answer[]" placeholder="Answer" dir="ltr"><?php echo htmlspecialchars($faq['a'] ?? ''); ?></textarea>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="faq-item border rounded p-3 mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>FAQ 1</strong>
+                            <button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>
+                        </div>
+                        <input type="text" class="form-control mb-2" name="faq_question[]" placeholder="Question">
+                        <textarea class="form-control" name="faq_answer[]" placeholder="Answer" dir="ltr"></textarea>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <button type="button" id="add-faq" class="btn btn-secondary btn-sm mt-2">+ Add FAQ</button>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-primary">Save FAQs</button>
+            </div>
+        </form>
+    </div>
     <div class="mt-5">
     <div class="page-section">
         <div class="card-header">
@@ -930,6 +993,27 @@ foreach ($redirects as $slug => $info) {
             // Renumber remaining images
             $('.image-item').each(function(index) {
                 $(this).find('h6').text('Image ' + (index + 1));
+            });
+        });
+
+        // FAQs dynamic logic
+        $('#add-faq').on('click', function() {
+            var count = $('.faq-item').length + 1;
+            var html = '<div class="faq-item border rounded p-3 mb-2">' +
+                '<div class="d-flex justify-content-between align-items-center mb-2">' +
+                '<strong>FAQ ' + count + '</strong>' +
+                '<button type="button" class="btn btn-sm btn-danger remove-faq">Remove</button>' +
+                '</div>' +
+                '<input type="text" class="form-control mb-2" name="faq_question[]" placeholder="Question">' +
+                '<textarea class="form-control" name="faq_answer[]" placeholder="Answer" dir="ltr"></textarea>' +
+                '</div>';
+            $('#faq-wrapper').append(html);
+        });
+        $('#faq-wrapper').on('click', '.remove-faq', function() {
+            $(this).closest('.faq-item').remove();
+            // Renumber
+            $('.faq-item').each(function(index) {
+                $(this).find('strong').text('FAQ ' + (index + 1));
             });
         });
     });

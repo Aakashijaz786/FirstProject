@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube to MP4 - YT1S</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/features.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <script src="js/script.js" defer></script>
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="images/logo.webp" alt="YT1s Logo" class="logo-image" data-image-key="logoImage" data-i18n="logoImage">
+                    <span class="logo-text">YT1s</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link" data-i18n="navDownloader">Youtube Downloader</a>
+                    <a href="youtube-to-mp3.html" class="nav-link" data-i18n="navMP3">Youtube to MP3</a>
+                    <a href="youtube-to-mp4.html" class="nav-link active" data-i18n="navMP4">Youtube to MP4</a>
+                    <div class="language-dropdown">
+                        <a href="#" class="nav-link language-toggle" id="languageToggle">English</a>
+                        <div class="language-menu" id="languageMenu">
+                            <div class="language-item active" data-lang="en">English</div>
+                            <div class="language-item" data-lang="de">Deutsch</div>
+                            <div class="language-item" data-lang="es">Español</div>
+                            <div class="language-item" data-lang="ar">عربي</div>
+                            <div class="language-item" data-lang="bn">বাঙালি</div>
+                            <div class="language-item" data-lang="fr">Français</div>
+                            <div class="language-item" data-lang="hi">हिन्दी / Hindi</div>
+                            <div class="language-item" data-lang="id">Indonesian</div>
+                            <div class="language-item" data-lang="it">Italiano</div>
+                            <div class="language-item" data-lang="ja">日本語</div>
+                            <div class="language-item" data-lang="ko">한국어</div>
+                            <div class="language-item" data-lang="my">Myanmar (မြန်မာ)</div>
+                            <div class="language-item" data-lang="ms">Malay</div>
+                            <div class="language-item" data-lang="tl">Filipino</div>
+                            <div class="language-item" data-lang="pt">Português</div>
+                            <div class="language-item" data-lang="ru">Русский</div>
+                            <div class="language-item" data-lang="th">ไทย</div>
+                            <div class="language-item" data-lang="tr">Türkçe</div>
+                            <div class="language-item" data-lang="vi">Tiếng Việt</div>
+                            <div class="language-item" data-lang="zh-cn">简体中文</div>
+                            <div class="language-item" data-lang="zh-tw">繁體中文</div>
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-title" data-i18n="heroTitle">YouTube to MP4</h1>
+            <p class="hero-subtitle" data-i18n="heroSubtitle">Convert and Download YouTube videos to MP4 Free in in HD</p>
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="Search or paste Youtube link here" data-i18n="searchPlaceholder">
+                <button class="convert-btn" data-i18n="convertBtn">Convert</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Description Section -->
+    <section class="description-section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="sectionTitle">Free YouTube to MP4 Converter</h2>
+            <div class="description-content">
+                <p data-i18n="description1">
+                    Yt1s is Popular YouTube to MP4 Converter. using this Free YouTube Downloader that Allow to Easily Download and save YouTube Videos in High quality.
+                </p>
+                <p data-i18n="description2">
+                    Follow Just simple process insert URL in to search box. Select Quality You can download YouTube MP4 Videos and save them different quality such as 144p, 240p, 360p, 480p, 720p, 1080p, 1440p (2k) and upto 2160p (4k). Our Youtube Video Downloader totally Safe and secure.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card card-blue">
+                    <div class="icon-container">
+                        <img src="images/clock.webp" alt="Easy and High speed" class="feature-icon" data-image-key="feature1Icon" data-i18n="feature1Icon">
+                    </div>
+                    <div class="feature-card-content">
+                        <h3 class="feature-title" data-i18n="feature1Title">Easy and High speed</h3>
+                        <p class="feature-description" data-i18n="feature1Desc">
+                            Our YouTube to MP4 Converter is Easy to use download YouTube Video to MP4 Fast. Just Follow Simple Steps. No need to install software and registration.
+                        </p>
+                    </div>
+                </div>
+                <div class="feature-card card-pink">
+                    <div class="icon-container">
+                        <img src="images/limit.webp" alt="Unlimited Downloads" class="feature-icon" data-image-key="feature2Icon" data-i18n="feature2Icon">
+                    </div>
+                    <div class="feature-card-content">
+                        <h3 class="feature-title" data-i18n="feature2Title">Unlimited Downloads</h3>
+                        <p class="feature-description" data-i18n="feature2Desc">
+                            Convert and Download MP4 from YouTube without any limitations with High Speed. Download Video as much as you want without Advertisement.
+                        </p>
+                    </div>
+                </div>
+                <div class="feature-card card-green">
+                    <div class="icon-container">
+                        <img src="images/safe.webp" alt="Safe and secure" class="feature-icon" data-image-key="feature3Icon" data-i18n="feature3Icon">
+                    </div>
+                    <div class="feature-card-content">
+                        <h3 class="feature-title" data-i18n="feature3Title">Totally Safe and Secure</h3>
+                        <p class="feature-description" data-i18n="feature3Desc">
+                            We don't store any data and information from a user and the downloaded file does not contain viruses or Malware so this Downloader is 100% Safe and Secure.
+                        </p>
+                    </div>
+                </div>
+                <div class="feature-card card-yellow">
+                    <div class="icon-container">
+                        <img src="images/platform.webp" alt="Compatible" class="feature-icon" data-image-key="feature4Icon" data-i18n="feature4Icon">
+                    </div>
+                    <div class="feature-card-content">
+                        <h3 class="feature-title" data-i18n="feature4Title">Compatible with All Devices</h3>
+                        <p class="feature-description" data-i18n="feature4Desc">
+                            Our YouTube to MP4 Converter is Compatible with All devices such PC, Macs or iPhones, Android, tablets, etc., and All Browsers including Google Chrome, Microsoft Edge, Firefox, Safari, Brave Browser, and Opera.
+                        </p>
+                    </div>
+                </div>
+                <div class="feature-card card-pink-alt">
+                    <div class="icon-container">
+                        <img src="images/support.webp" alt="Support All Formats" class="feature-icon" data-image-key="feature5Icon" data-i18n="feature5Icon">
+                    </div>
+                    <div class="feature-card-content">
+                        <h3 class="feature-title" data-i18n="feature5Title">Support All Formats</h3>
+                        <p class="feature-description" data-i18n="feature5Desc">
+                            YT1s supports downloading All video and Audio formats such as MP3, MP4, M4V, 3GP, WMV, FLV, MO, WEBM, etc., and also converts YouTube to MP4 in different quality like 144p, 240p, 360p, 480p, 720p, 1080p (Full HD), 1440p, 2160p (4k), 4320p (8k).
+                        </p>
+                    </div>
+                </div>
+                <div class="feature-card card-blue-alt">
+                    <div class="icon-container">
+                        <img src="images/cloud.webp" alt="Cloud storage" class="feature-icon" data-image-key="feature6Icon" data-i18n="feature6Icon">
+                    </div>
+                    <div class="feature-card-content">
+                        <h3 class="feature-title" data-i18n="feature6Title">Provide cloud storage</h3>
+                        <p class="feature-description" data-i18n="feature6Desc">
+                            We offer cloud storage so Save Converted videos into Google Drive and Dropbox Free of cost.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formats Section -->
+    <section class="formats-section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="formatsTitle">Convert Youtube to MP4 Online</h2>
+            <div class="formats-grid">
+                <div class="format-btn">
+                    <div class="format-logo">
+                        <span class="format-you">You</span>
+                        <span class="format-tube">Tube</span>
+                    </div>
+                    <div class="format-name" data-i18n="formatLabel1">MP4</div>
+                </div>
+                <div class="format-btn">
+                    <div class="format-logo">
+                        <span class="format-you">You</span>
+                        <span class="format-tube">Tube</span>
+                    </div>
+                    <div class="format-name" data-i18n="formatLabel2">MP3</div>
+                </div>
+                <div class="format-btn">
+                    <div class="format-logo">
+                        <span class="format-you">You</span>
+                        <span class="format-tube">Tube</span>
+                    </div>
+                    <div class="format-name" data-i18n="formatLabel3">3GP</div>
+                </div>
+                <div class="format-btn">
+                    <div class="format-logo">
+                        <span class="format-you">You</span>
+                        <span class="format-tube">Tube</span>
+                    </div>
+                    <div class="format-name" data-i18n="formatLabel4">WEBM</div>
+                </div>
+                <div class="format-btn">
+                    <div class="format-logo">
+                        <span class="format-you">You</span>
+                        <span class="format-tube">Tube</span>
+                    </div>
+                    <div class="format-name" data-i18n="formatLabel5">M4A</div>
+                </div>
+            </div>
+            <div class="formats-description">
+                <p data-i18n="formatsDesc">
+                    This YouTube to MP4 converter Allows you to download YouTube videos to MP4 Free in a variety of formats including the commonly used MP4 format such as MP4, AVI, Webm, MKV m4a, and 3gp.
+                </p>
+                <button class="convert-now-btn" data-i18n="convertNow">Convert Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Steps Section -->
+    <section class="steps-section">
+        <div class="container">
+            <h2 class="section-title" data-i18n="stepsTitle">How to Convert and Download YouTube Videos to MP4</h2>
+            <div class="steps-grid">
+                <div class="step-item">
+                    <div class="step-number step-blue">1</div>
+                    <p class="step-text" data-i18n="step1">Enter Keywords or Copy and Paste YouTube Video URL into Search Box.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-number step-pink">2</div>
+                    <p class="step-text" data-i18n="step2">Select MP4 Video and click Download button.</p>
+                </div>
+                <div class="step-item">
+                    <div class="step-number step-green">3</div>
+                    <p class="step-text" data-i18n="step3">Press Download button After conversion complete.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="#" class="footer-link" data-i18n="contact">Contact us</a>
+                    <a href="#" class="footer-link" data-i18n="privacy">Privacy Policy</a>
+                    <a href="#" class="footer-link" data-i18n="terms">Terms of service</a>
+                </div>
+                <div class="footer-copyright">
+                    <p data-i18n="copyright">&copy; 2025 Yt1s</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+

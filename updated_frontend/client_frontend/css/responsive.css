@@ -1,0 +1,174 @@
+/* Responsive Styles */
+
+/* Tablet Styles */
+@media (max-width: 968px) {
+    .hero-title {
+        font-size: 32px;
+    }
+    
+    .hero-subtitle {
+        font-size: 16px;
+    }
+    
+    .section-title {
+        font-size: 28px;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .features-section .container {
+        padding: 0 20px;
+    }
+    
+    .steps-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .step-item {
+        max-width: 100%;
+    }
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .hero {
+        padding: 40px 0;
+    }
+    
+    .hero-title {
+        font-size: 28px;
+    }
+    
+    .hero-subtitle {
+        font-size: 14px;
+    }
+    
+    .search-box {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .search-input {
+        width: 100%;
+    }
+    
+    .convert-btn {
+        width: 100%;
+    }
+    
+    .section-title {
+        font-size: 24px;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .features-section .container {
+        padding: 0 20px;
+    }
+    
+    .formats-grid {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .format-btn {
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .steps-grid {
+        gap: 30px;
+    }
+    
+    .step-item {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+    }
+    
+    .step-text {
+        padding-top: 0;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .footer-links {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+/* Small Mobile Styles */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .hero-title {
+        font-size: 24px;
+    }
+    
+    .hero-subtitle {
+        font-size: 14px;
+    }
+    
+    .section-title {
+        font-size: 20px;
+    }
+    
+    .feature-card {
+        height: auto;
+        min-height: 350px;
+    }
+    
+    .icon-container {
+        height: 200px;
+    }
+    
+    .feature-card-content {
+        height: auto;
+        padding: 20px;
+    }
+    
+    .features-section .container {
+        padding: 0 15px;
+    }
+    
+    .feature-title {
+        font-size: 18px;
+    }
+    
+    .feature-description {
+        font-size: 14px;
+    }
+    
+    .faq-question {
+        font-size: 18px;
+    }
+    
+    .faq-answer {
+        font-size: 14px;
+    }
+}
+
