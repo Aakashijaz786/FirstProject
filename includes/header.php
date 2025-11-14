@@ -223,11 +223,11 @@ if ($res && $res->num_rows > 0) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"> 
-<title>Contact Us</title>
-<meta name="description" content="We are here to answer any questions or inquiries that you may have. Reach out to us and we will respond as soon as possible." />
-<meta name="author" content="Contact Us" />
-<meta property="og:title" content="Contact Us" />
-<meta property="og:description" content="We are here to answer any questions or inquiries that you may have. Reach out to us and we will respond as soon as possible." />
+<title><?php echo htmlspecialchars($meta_title); ?></title>
+<meta name="description" content="<?php echo htmlspecialchars($meta_description); ?>" />
+<meta name="author" content="<?php echo htmlspecialchars($meta_title); ?>" />
+<meta property="og:title" content="<?php echo htmlspecialchars($meta_title); ?>" />
+<meta property="og:description" content="<?php echo htmlspecialchars($meta_description); ?>" />
 <meta property="og:type" content="article" />
 <?php if ($canonical_url): ?>
 <meta property="og:url" content="<?php echo htmlspecialchars($canonical_url); ?>" />
@@ -237,12 +237,14 @@ if ($res && $res->num_rows > 0) {
 <?php endif; ?>
 <meta property="og:site_name" content="<?php echo htmlspecialchars($site_title); ?>" />
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Contact Us" />
-<meta name="twitter:description" content="We are here to answer any questions or inquiries that you may have. Reach out to us and we will respond as soon as possible." />
+<meta name="twitter:title" content="<?php echo htmlspecialchars($meta_title); ?>" />
+<meta name="twitter:description" content="<?php echo htmlspecialchars($meta_description); ?>" />
 <?php if ($favicons['favicon_16']): ?>
 <meta name="twitter:image:src" content="<?php echo htmlspecialchars($favicons['favicon_16']); ?>" />
 <?php endif; ?>
+<?php if ($canonical_url): ?>
 <meta name="twitter:site" content="<?php echo htmlspecialchars($canonical_url); ?>" />
+<?php endif; ?>
 <link rel="preconnect" href="//www.google-analytics.com">
 <link rel="dns-prefetch" href="//www.google-analytics.com">
 <link rel="preconnect" href="//pagead2.googlesyndication.com" crossorigin>
@@ -279,6 +281,7 @@ if ($res && $res->num_rows > 0) {
 <link rel="stylesheet" href="/assets/css/Oyf3H4i0HaSN.css">
 <link rel="stylesheet" href="/assets/css/navigation.css">
 <link rel="stylesheet" href="/assets/css/index.css">
+<link rel="stylesheet" href="/assets/css/yt1s.css">
 <?php if (!empty($global_header_content)) echo $global_header_content; ?>
 </head>
 <body class="bg-gray">

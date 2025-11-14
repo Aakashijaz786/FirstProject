@@ -12,7 +12,7 @@
  * @param mysqli $conn Database connection
  * @return bool Success status
  */
-function logDownload($url, $download_type, $conn) {
+function logDownload($url, $download_type, $conn, array $meta = []) {
     // Get user's IP address
     $ip_address = getClientIP();
     
@@ -22,16 +22,14 @@ function logDownload($url, $download_type, $conn) {
     // Get country from IP address
     $country = getCountryFromIP($ip_address);
     
-    // Sanitize inputs
-    $url = $conn->real_escape_string($url);
-    $download_type = $conn->real_escape_string($download_type);
-    $ip_address = $conn->real_escape_string($ip_address);
-    $user_agent = $conn->real_escape_string($user_agent);
-    $country = $conn->real_escape_string($country);
+    $file_name = $meta['file_name'] ?? null;
+    $file_type = $meta['file_type'] ?? null;
+    $file_size_bytes = isset($meta['file_size_bytes']) ? (int)$meta['file_size_bytes'] : null;
+    $provider_key = $meta['provider_key'] ?? null;
     
     // Insert into database
-    $sql = "INSERT INTO downloads (url, ip_address, user_agent, download_type, country, status) 
-            VALUES (?, ?, ?, ?, ?, 'started')";
+    $sql = "INSERT INTO downloads (url, ip_address, user_agent, download_type, country, status, file_name, file_type, file_size_bytes, provider_key) 
+            VALUES (?, ?, ?, ?, ?, 'started', ?, ?, ?, ?)";
     
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
@@ -39,16 +37,29 @@ function logDownload($url, $download_type, $conn) {
         return false;
     }
     
-    $stmt->bind_param("sssss", $url, $ip_address, $user_agent, $download_type, $country);
+    $stmt->bind_param(
+        "sssssssis",
+        $url,
+        $ip_address,
+        $user_agent,
+        $download_type,
+        $country,
+        $file_name,
+        $file_type,
+        $file_size_bytes,
+        $provider_key
+    );
     $result = $stmt->execute();
     
     if (!$result) {
         error_log("Failed to log download: " . $stmt->error);
+        $stmt->close();
         return false;
     }
     
+    $insertId = $stmt->insert_id ?: $conn->insert_id;
     $stmt->close();
-    return true;
+    return $insertId ?: true;
 }
 
 /**

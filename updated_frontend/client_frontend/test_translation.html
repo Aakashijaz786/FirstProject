@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Translation Test</title>
+</head>
+<body>
+    <h1>Translation API Test</h1>
+    <button onclick="testTranslation()">Test Translation</button>
+    <div id="result"></div>
+    
+    <script>
+        async function testTranslation() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // Test 1: Check API connection
+                const healthCheck = await fetch('http://localhost:8000/');
+                const healthData = await healthCheck.json();
+                console.log('API Health:', healthData);
+                
+                // Test 2: Test single translation
+                const translateResponse = await fetch('http://localhost:8000/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: "Hello World",
+                        target_lang: "es",
+                        source_lang: "en"
+                    })
+                });
+                
+                if (translateResponse.ok) {
+                    const translateData = await translateResponse.json();
+                    resultDiv.innerHTML = `
+                        <h2>✅ API Working!</h2>
+                        <p><strong>Original:</strong> Hello World</p>
+                        <p><strong>Translated:</strong> ${translateData.translatedText}</p>
+                    `;
+                } else {
+                    const errorText = await translateResponse.text();
+                    resultDiv.innerHTML = `
+                        <h2>❌ Translation Failed</h2>
+                        <p>Status: ${translateResponse.status}</p>
+                        <p>Error: ${errorText}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h2>❌ Connection Error</h2>
+                    <p>${error.message}</p>
+                    <p>Make sure backend is running on http://localhost:8000</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
+

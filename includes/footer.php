@@ -329,8 +329,10 @@ if ($current_slug && $lang_id) {
     </div>
 </footer>
 <script src="/assets/js/yCLRZN5bZzQA.js" defer></script>
+<script src="/assets/js/index.js" defer></script>
 <script src="/assets/js/navigation.js" defer></script>
 <script src="/assets/js/footer.js" defer></script>
+<script src="/assets/js/yt1s.js" defer></script>
 <?php
 // Fetch global_footer content
 $global_footer_content = '';
@@ -384,6 +386,16 @@ if ($res && $res->num_rows > 0) {
     }
   ]
 }
+</script>
+<script>
+document.addEventListener('contextmenu', function (event) {
+    event.preventDefault();
+});
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'F12' || (event.ctrlKey && event.shiftKey && ['I', 'J', 'C'].includes(event.key))) {
+        event.preventDefault();
+    }
+});
 </script>
 </body>
 </html>

@@ -4,7 +4,18 @@
         header('Location: login.php');
         exit;
     }
-    require_once '../includes/config.php';
+require_once '../includes/config.php';
+
+include 'includes/header.php';
+?>
+    <div class="main-content" id="mainContent">
+        <div class="alert alert-info m-4">
+            The standalone MP3 editor has been discontinued. Please manage content via the new FastAPI workflow.
+        </div>
+    </div>
+<?php
+include 'includes/footer.php';
+exit;
 
     // Get language id and fetch language info
     $lang_id = isset($_GET['id']) ? intval($_GET['id']) : 0;

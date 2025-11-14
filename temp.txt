@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YT1s - YouTube Video Downloader</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-text">YT1s</span>
+                </div>
+                <nav class="nav">
+                    <button class="nav-btn active" data-tab="youtube-downloader" data-page="home">
+                        Youtube Downloader
+                    </button>
+                    <button class="nav-btn" data-tab="mp3" data-page="mp3">
+                        Youtube to MP3
+                    </button>
+                    <button class="nav-btn" data-tab="mp4" data-page="mp4">
+                        Youtube to MP4
+                    </button>
+                    <button class="nav-btn language-btn">English</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- HOME PAGE -->
+    <main class="layout" id="home-page">
+        <div class="main-wrapper">
+            <h1>YT1S - YouTube Video Downloader</h1>
+            <p>Convert and Download Youtube Video Online Free</p>
+            
+            <div class="search-container">
+                <input type="text" class="url-input search-input" placeholder="Search or paste Youtube link here" required>
+                <button class="convert-btn" onclick="handleConvert(event, 'mp4')">Convert</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="section-best">
+                <h2>Best Youtube Video Downloader</h2>
+                <p class="description">YT1s is Free and Easy YouTube Downloader that Allows you to Convert and Download YouTube videos on Your Devices in multiple formats and best Quality. Using this Yt1s Downloader You can Download Unlimited Video and Audio on Your Mobile and other Devices without Any registration and without spending Money. So You can Play MP3 and MP4 without an internet connection.</p>
+
+                <ul class="list-item">
+                    <li class="list">
+                        <div class="image" style="background: rgb(210, 227, 252);">🕐</div>
+                        <div class="des-list">
+                            <h3>Easy to use and Fast Download</h3>
+                            <p class="box-des">Using this Yt1s Fast YouTube Downloader help to Download and Save MP4 and MP3 Easily. Just Copy and Paste the URL into search box and press "convert" button.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(250, 210, 207);">♾️</div>
+                        <div class="des-list">
+                            <h3>Conversions without limit</h3>
+                            <p class="box-des">YT1s offers Unlimited Convert From YouTube and Download MP3 and MP4 without Length limit Free of cost.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(206, 234, 214);">✅</div>
+                        <div class="des-list">
+                            <h3>Totally Safe and Secure</h3>
+                            <p class="box-des">Device Security and personal data are of high priority to people when they download videos from a third-party website. YT1s are completely virus-free and Totally Secure to YouTube Downloader.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(254, 239, 195);">🌐</div>
+                        <div class="des-list">
+                            <h3>Full Platforms Compatibility</h3>
+                            <p class="box-des">YT1s is fully compatible to Download YouTube videos and MP3 with All types of devices like Windows, Mac or Linux, Android, and iPhone. Also Supports All Browsers Such As Chrome, Firefox, Safari, Microsoft Edge, etc.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(255, 213, 236);">💬</div>
+                        <div class="des-list">
+                            <h3>Support multiple formats</h3>
+                            <p class="box-des">YT1s allows conversion and Downloading of YouTube Audio, Video, and other formats such as MP3, MP4, M4V, FLV, WEBM, 3GP, WMV, AVI, etc.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(209, 244, 255);">☁️</div>
+                        <div class="des-list">
+                            <h3>Cloud integration</h3>
+                            <p class="box-des">We offer to upload and save converted files directly into Google Drive and Dropbox.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="section-down-type">
+                <h2>Download Youtube videos Free using Yt1s</h2>
+                <ul class="list-icon">
+                    <li>📹</li>
+                    <li>🔊</li>
+                    <li>⚙️</li>
+                    <li>🚀</li>
+                    <li>🔒</li>
+                </ul>
+                <p class="description">With our YT1s YouTube video downloader, you can download and save youtube videos for free of cost! You can get high-quality such as highest quality: full HD, 1080p, 2k, 4k, and other formats. Our youtube video downloader works on PC and mobile and other devices, Helping you to download videos from youtube. Our Youtube downloader is a Simple and Free way to Download Youtube Video.</p>
+                <button class="convert-next" onclick="scrollToTop()">Convert Now</button>
+            </div>
+
+            <div class="section-count">
+                <h2>How to download YouTube videos online in 3 Simple Steps</h2>
+                <ul class="list-count">
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(210, 227, 252); color: rgb(66, 133, 244);">1</span>
+                        <span class="list-text">Search the Keyword or Copy the link to the YouTube video and paste it into the input box.</span>
+                    </li>
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(250, 210, 207); color: rgb(237, 99, 87);">2</span>
+                        <span class="list-text">Select the MP4 or MP3 format you want and then press the Download button.</span>
+                    </li>
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(206, 234, 214); color: rgb(52, 168, 83);">3</span>
+                        <span class="list-text">Wait a Few Moments for the complete conversion and Download it's an Easy, simple, and Fast process.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- MP3 PAGE -->
+    <main class="layout" id="mp3-page" style="display: none;">
+        <div class="main-wrapper">
+            <h1>YouTube to MP3 Converter</h1>
+            <p>Convert and Download Youtube Videos in MP3 High Quality and Free</p>
+            
+            <div class="search-container">
+                <input type="text" class="url-input search-input" placeholder="Search or paste Youtube link here" required>
+                <button class="convert-btn" onclick="handleConvert(event, 'mp3')">Convert</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="section-best">
+                <h2>Free YouTube to MP3 Converter</h2>
+                <p class="description">Our Yt1s Easy and Fast YouTube to MP3 Converter tool Allows you to convert and download YouTube videos to mp3 in High-Quality Format. Using this YouTube Converter convert and save mp3 Audio in multiple formats such as 64kbps, 96kbps, 128kbps, 192kbps, 256 kbps, and 320kbps With just a few simple steps and a few seconds.</p>
+
+                <ul class="list-item">
+                    <li class="list">
+                        <div class="image" style="background: rgb(210, 227, 252);">🕐</div>
+                        <div class="des-list">
+                            <h3>Easy and Fast conversion and Download</h3>
+                            <p class="box-des">Yt1s offers Quick YouTube to mp3 conversion and download. it's Easy to use Just copy and paste the YouTube video link and choose a quality format of Audio you want to convert.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(250, 210, 207);">♾️</div>
+                        <div class="des-list">
+                            <h3>Free Converter Without limitation</h3>
+                            <p class="box-des">Convert YouTube to MP3 and Download it on Your Device 100% Free of cost and without any limitation of speed and number of files.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(206, 234, 214);">✅</div>
+                        <div class="des-list">
+                            <h3>100% Safe and Secure</h3>
+                            <p class="box-des">We don't collect any personal information so Downloading MP3 From Youtube is safe and secure using this YouTube Converter. Our tool is Completely protected from Malware and virus.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(254, 239, 195);">🎵</div>
+                        <div class="des-list">
+                            <h3>High-Quality mp3 Download</h3>
+                            <p class="box-des">This YouTube to MP3 converter provides Multiple Quality mp3 Formats (upto 320kbps) from YouTube and other formats such as 3GP, MP4, WMA, WEBM, M4A, and FLV.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(255, 213, 236);">🌐</div>
+                        <div class="des-list">
+                            <h3>Compatible with All browsers and devices</h3>
+                            <p class="box-des">This website supports in All Devices and such As Android, iPhone, Tablet and Computer and work well All Browsers Chrome, Firefox, Safari, Microsoft Edge, Opera etc.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(209, 244, 255);">☁️</div>
+                        <div class="des-list">
+                            <h3>Save MP3 on Cloud Plateforms</h3>
+                            <p class="box-des">We Support saving the converted file directly into Google Drive and Dropbox.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="section-count">
+                <h2>How to Convert YouTube to MP3 in 3 Easy Steps?</h2>
+                <ul class="list-count">
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(210, 227, 252); color: rgb(66, 133, 244);">1</span>
+                        <span class="list-text">Paste the youtube URL into the search box which wants to convert to MP3.</span>
+                    </li>
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(250, 210, 207); color: rgb(237, 99, 87);">2</span>
+                        <span class="list-text">Choose MP3 and Click the "Convert" button.</span>
+                    </li>
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(206, 234, 214); color: rgb(52, 168, 83);">3</span>
+                        <span class="list-text">Wait while the conversation is completed and download the mp3.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- MP4 PAGE -->
+    <main class="layout" id="mp4-page" style="display: none;">
+        <div class="main-wrapper">
+            <h1>Youtube to MP4</h1>
+            <p>Convert and Download YouTube videos to MP4 Free in HD</p>
+            
+            <div class="search-container">
+                <input type="text" class="url-input search-input" placeholder="Search or paste Youtube link here" required>
+                <button class="convert-btn" onclick="handleConvert(event, 'mp4')">Convert</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="section-best">
+                <h2>Free YouTube to MP4 Converter</h2>
+                <p class="description">Yt1s is Popular YouTube to MP4 Converter. using this Free YouTube Downloader that Allow to Easily Download and save YouTube Videos in High quality.</p>
+
+                <ul class="list-item">
+                    <li class="list">
+                        <div class="image" style="background: rgb(210, 227, 252);">🕐</div>
+                        <div class="des-list">
+                            <h3>Easy and High speed</h3>
+                            <p class="box-des">Our YouTube to MP4 Converter is Easy to use download YouTube Video to MP4 Fast. Just Follow Simple Steps. No need to install software and registration.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(250, 210, 207);">♾️</div>
+                        <div class="des-list">
+                            <h3>Unlimited Downloads</h3>
+                            <p class="box-des">Convert and Download MP4 from YouTube without any limitations with High Speed. Download Video as much as you want without Advertisement.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(206, 234, 214);">✅</div>
+                        <div class="des-list">
+                            <h3>Totally Safe and Secure</h3>
+                            <p class="box-des">We don't store any data and information from a user and the downloaded file does not contain viruses or Malware so this Downloader is 100% Safe and Secure.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(254, 239, 195);">🌐</div>
+                        <div class="des-list">
+                            <h3>Compatible with All Devices</h3>
+                            <p class="box-des">Our YouTube to MP4 Converter is Compatible with All devices such PC, Macs or iPhones, Android, tablets, etc., and All Browsers including Google Chrome, Microsoft Edge, Firefox, Safari, Brave Browser, and Opera.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(255, 213, 236);">📦</div>
+                        <div class="des-list">
+                            <h3>Support All Formats</h3>
+                            <p class="box-des">YT1s supports downloading All video and Audio formats such as MP3, MP4, M4V, 3GP, WMV, FLV, MO, WEBM, etc.</p>
+                        </div>
+                    </li>
+                    <li class="list">
+                        <div class="image" style="background: rgb(209, 244, 255);">☁️</div>
+                        <div class="des-list">
+                            <h3>Provide cloud storage</h3>
+                            <p class="box-des">We offer cloud storage so Save Converted videos into Google Drive and Dropbox Free of cost.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="section-count">
+                <h2>How to Convert and Download YouTube Videos to MP4</h2>
+                <ul class="list-count">
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(210, 227, 252); color: rgb(66, 133, 244);">1</span>
+                        <span class="list-text">Enter Keywords or Copy and Paste YouTube Video URL into Search Box.</span>
+                    </li>
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(250, 210, 207); color: rgb(237, 99, 87);">2</span>
+                        <span class="list-text">Select MP4 Video and click Download button.</span>
+                    </li>
+                    <li class="list-wrapper">
+                        <span class="list-step" style="background: rgb(206, 234, 214); color: rgb(52, 168, 83);">3</span>
+                        <span class="list-text">Press Download button After conversion complete.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="menu-lists">
+            <a href="#" class="menu-links">Contact us</a>
+            <a href="#" class="menu-links">Privacy Policy</a>
+            <a href="#" class="menu-links">Terms of service</a>
+        </div>
+        <p class="copyright">© 2025 Yt1s</p>
+    </footer>
+
+    <!-- Modal for format selection -->
+    <div id="format-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Select Format</h2>
+            <div class="format-options" id="format-options"></div>
+            <button class="download-btn" onclick="downloadFile()">Download</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

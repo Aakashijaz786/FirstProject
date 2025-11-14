@@ -1,11 +1,16 @@
 <?php
 // Fetch site URL early for trailing slash redirects
 require_once 'includes/config.php';
+require_once 'includes/ads_helper.php';
 $site_url = '';
-$res = $conn->query("SELECT site_url FROM site_settings LIMIT 1");
+$site_enabled = true;
+$res = $conn->query("SELECT site_url, site_status FROM site_settings LIMIT 1");
 if ($res && $res->num_rows > 0) {
     $row = $res->fetch_assoc();
     $site_url = rtrim($row['site_url'], '/');
+    if (isset($row['site_status'])) {
+        $site_enabled = ((int)$row['site_status'] === 1);
+    }
 }
 
 // Get default language info
@@ -677,6 +682,7 @@ if ($canonical_url && $language_count > 1): ?>
 <link rel="stylesheet" href="/assets/css/Oyf3H4i0HaSN.css">
 <link rel="stylesheet" href="/assets/css/index.css">
 <link rel="stylesheet" href="/assets/css/navigation.css">
+<link rel="stylesheet" href="/assets/css/yt1s.css">
 <?php if (!empty($global_header_content)) echo $global_header_content; ?>
 </head>
 <body>
@@ -786,316 +792,236 @@ if ($canonical_url && $language_count > 1): ?>
     $image1 = h($home['image1'] ?? 'assets/images/hyiN6VP1TSNv.svg');
     $title2_2 = h($home['title2_2'] ?? 'TikTok video downloader for PC');
     $description2_2 = processContentForDisplay($home['description2_2'] ?? 'To use the tik tok video download in hd app on PC, lap...');
+
+    $faq_lang_id = $current_lang_id ?? $default_lang_id;
+    $faqs = [];
+    if ($faq_lang_id) {
+        $lang_check = $conn->query("SELECT faqs_enabled FROM languages WHERE id=$faq_lang_id LIMIT 1");
+        if ($lang_check && $lang_check->num_rows > 0) {
+            $lang_data = $lang_check->fetch_assoc();
+            if (!empty($lang_data['faqs_enabled'])) {
+                $faq_res = $conn->query("SELECT question, answer FROM language_faqs WHERE language_id=$faq_lang_id ORDER BY id ASC");
+                if ($faq_res && $faq_res->num_rows > 0) {
+                    while ($faq = $faq_res->fetch_assoc()) {
+                        $faqs[] = $faq;
+                    }
+                }
+            }
+        }
+    }
+    $faqs_loaded = true;
+
+    date_default_timezone_set('Asia/Karachi');
+    $server_time_string = date('d M Y H:i:s');
     $image2 = h($home['image2'] ?? 'assets/images/Pp4JMR9kwYBZ.svg');
 
     ?>
 
     <?php
    
-
-    include 'includes/navigation.php';
-    
-
-    $qualities = [];
-    $error = '';
-    $data = null;
-    $showModal = false;    
-
     ?>
-        <main>
-            <section>
-                <div class="splash-container" id="splash" hx-ext="include-vals">
-                    <div id="splash_wrapper" class="splash" style="max-width: 1680px;">
-                        <h1 class="splash-head hide-after-request" id="bigmessage">
-                            <?php echo $header; ?> </h1>
-                        <div class="error-container-wrapper">
-                            <div id="errorContainer"></div>
-                        </div>
-                        <form class="form g hide-after-request" id="tiktok_form" rel="nofollow">
-                            <div class="loader loader--style8 htmx-indicator u-1" id="main_loader" style="display: none; position: relative; z-index: 1000;">
-                                <div style="width: 50px; height: 50px; border: 5px solid #ffa703; border-top: 5px solid #002186; border-radius: 50%; animation: spin 1s linear infinite; margin: 20px auto;top: -11px;left: 50%;position: absolute;"></div>
-                            </div>
-                            <div class="relative u-fw">
+    <?php include __DIR__ . '/includes/yt_nav.php'; ?>
+    <?php
+    $download_label_text = isset($current_lang['download_label']) && $current_lang['download_label'] !== ''
+        ? h($current_lang['download_label'])
+        : 'Convert';
+    $search_placeholder = isset($current_lang['search_placeholder']) && $current_lang['search_placeholder'] !== ''
+        ? h($current_lang['search_placeholder'])
+        : 'Search or paste Youtube link here';
+    $hero_kicker_text = $pink_title1_2 ?: strtoupper($site_title);
+    $hero_subtext = strip_tags($heading2_description);
+    $hero_helper_text = $site_enabled ? sprintf('%s - %s', h($site_title), h($server_time_string)) : '';
+    $card_palette = ['#d2e3fc', '#fad2cf', '#ceead6', '#feefc3', '#ffd5ec', '#d1f4ff'];
 
-                                <input id="main_page_text" name="page" type="text" class="form-control input-lg" placeholder="Just insert a link" value="<?php echo isset($_POST['page']) ? htmlspecialchars($_POST['page']) : ''; ?>">
-                                  <?php
-                                $download_label = isset($current_lang['download_label']) && $current_lang['download_label'] !== '' ? h($current_lang['download_label']) : 'Download';
+    $feature_sources = [
+        ['title' => $title1, 'body' => strip_tags($description1)],
+        ['title' => $title2, 'body' => strip_tags($description2)],
+        ['title' => $title3, 'body' => strip_tags($description3)]
+    ];
 
-                                $paste_label = isset($current_lang['paste_label']) && $current_lang['paste_label'] !== '' ? h($current_lang['paste_label']) : 'Paste';
+    if (!empty($images_data)) {
+        foreach ($images_data as $img_item) {
+            $feature_sources[] = [
+                'title' => strip_tags($img_item['title'] ?? ''),
+                'body' => strip_tags($img_item['description'] ?? ''),
+                'image' => !empty($img_item['image']) ? '/admin/' . ltrim($img_item['image'], '/') : null,
+                'image_alt' => !empty($img_item['image']) ? basename($img_item['image']) : ''
+            ];
+        }
+    }
 
-                                ?>
-                                <button id="paste" type="button">
-                                    <svg data-v-611f7da7="" width="14" height="18" viewBox="0 0 14 18" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path data-v-611f7da7=""
-                                            d="M4.75 2.9625C4.75 2.505 4.90804 2.06624 5.18934 1.74274C5.47064 1.41924 5.85218 1.2375 6.25 1.2375H7.75C8.14782 1.2375 8.52936 1.41924 8.81066 1.74274C9.09196 2.06624 9.25 2.505 9.25 2.9625M4.75 2.9625H3.25C2.85218 2.9625 2.47064 3.14424 2.18934 3.46774C1.90804 3.79124 1.75 4.23 1.75 4.6875V15.0375C1.75 15.495 1.90804 15.9338 2.18934 16.2573C2.47064 16.5808 2.85218 16.7625 3.25 16.7625H10.75C11.1478 16.7625 11.5294 16.5808 11.8107 16.2573C12.092 15.9338 12.25 15.495 12.25 15.0375V4.6875C12.25 4.23 12.092 3.79124 11.8107 3.46774C11.5294 3.14424 11.1478 2.9625 10.75 2.9625H9.25H4.75ZM4.75 2.9625C4.75 3.41999 4.90804 3.85875 5.18934 4.18225C5.47064 4.50576 5.85218 4.6875 6.25 4.6875H7.75C8.14782 4.6875 8.52936 4.50576 8.81066 4.18225C9.09196 3.85875 9.25 3.41999 9.25 2.9625H4.75Z"
-                                            stroke="#383838" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round"></path>
-                                    </svg>
-                                    <span>
-                                        <?php echo $paste_label; ?>
-                                    </span>
-                                </button>
-                                <button type="submit" id="submit" class="vignette_active button-primary" >
-                                    <?php echo $download_label; ?>
-                                </button>
-                                 <?php if ($error): ?>
-                                    <div class="alert alert-danger mt-3"><?php echo $error; ?></div>
+    $yt_feature_cards = [];
+    foreach ($feature_sources as $index => $source) {
+        $content = trim(($source['title'] ?? '') . ($source['body'] ?? ''));
+        if ($content === '') {
+            continue;
+        }
+        $yt_feature_cards[] = [
+            'title' => $source['title'] ?? '',
+            'body' => $source['body'] ?? '',
+            'color' => $card_palette[$index % count($card_palette)],
+            'image' => $source['image'] ?? null,
+            'image_alt' => $source['image_alt'] ?? ''
+        ];
+    }
+
+    if (empty($yt_feature_cards)) {
+        $yt_feature_cards[] = [
+            'title' => $site_title,
+            'body' => 'Fast, secure and unlimited downloads.',
+            'color' => $card_palette[0],
+            'image' => null,
+            'image_alt' => ''
+        ];
+    }
+
+    $download_formats = ['MP3', 'MP4', 'WEBM', 'M4A', '3GP'];
+
+    $yt_steps = [];
+    if (!empty($add_columns_steps)) {
+        foreach ($add_columns_steps as $step) {
+            $heading_text = trim($step['heading'] ?? '');
+            $description_text = trim(strip_tags($step['description'] ?? ''));
+            $combined = $heading_text && $description_text ? $heading_text . ' ÃÂ¢Ã¢ÂÂ¬Ã¢ÂÂ ' . $description_text : ($heading_text ?: $description_text);
+            if ($combined !== '') {
+                $yt_steps[] = $combined;
+            }
+        }
+    }
+    if (empty($yt_steps)) {
+        $yt_steps = array_values(array_filter([
+            strip_tags($description1_2),
+            strip_tags($description2_2),
+            strip_tags($description_bottom)
+        ]));
+    }
+    if (empty($yt_steps)) {
+        $yt_steps = ['Paste the YouTube link.', 'Choose MP3 or MP4.', 'Tap convert to download.'];
+    }
+
+    $faq_section_title = $current_lang['faqs_heading'] ?? 'FAQ - YouTube Downloader';
+    $download_paragraph = !empty($description_bottom) ? strip_tags($description_bottom) : strip_tags($heading2_description);
+    $step_palette = [
+        ['bg' => '#d2e3fc', 'fg' => '#4285f4'],
+        ['bg' => '#fad2cf', 'fg' => '#ed6357'],
+        ['bg' => '#ceead6', 'fg' => '#34a853']
+    ];
+    ?>
+    <div class="layout">
+        <div class="index-module--mainWrapper--45cff">
+            <?php if (!empty(trim($hero_kicker_text))): ?>
+                <p class="index-module--heroKicker--edc12"><?php echo h($hero_kicker_text); ?></p>
+            <?php endif; ?>
+            <h1><?php echo $header; ?></h1>
+            <?php if (!empty($hero_subtext)): ?>
+                <div>
+                    <p><?php echo h($hero_subtext); ?></p>
+                </div>
+            <?php endif; ?>
+            <form class="index-module--converter--05f21" id="tiktok_form" rel="nofollow" method="post" action="/search.php" data-fastapi="1">
+                <div class="index-module--inputWrapper--87f00">
+                    <input type="search"
+                           class="index-module--search--fb2ee"
+                           placeholder="<?php echo $search_placeholder; ?>"
+                           name="page"
+                           id="main_page_text"
+                           value="<?php echo isset($_POST['page']) ? htmlspecialchars($_POST['page']) : ''; ?>"
+                           required>
+                </div>
+                <button class="index-module--button--62cd9" type="submit" id="submit"><?php echo $download_label_text; ?></button>
+            </form>
+            <div id="main_loader" class="index-module--loader--d19a8" aria-hidden="true"></div>
+            <div id="errorContainer" class="index-module--error--3bb18"></div>
+            <div id="downloadOptions" hidden></div>
+            <?php if (!empty($hero_helper_text)): ?>
+                <p class="index-module--serverTime--71da8"><?php echo $hero_helper_text; ?></p>
+            <?php endif; ?>
+        </div>
+        <div class="index-module--adSlot--c5c77">
+            <?php render_ad_slot($conn, 'global_header'); ?>
+        </div>
+        <div class="index-module--container--9e7f9">
+            <div class="index-module--sectionBest--bd1c5">
+                <h2><?php echo $heading2 ?: 'Best Youtube Video Downloader'; ?></h2>
+                <div>
+                    <?php if (!empty($description1)): ?>
+                        <p class="index-module--description--c0179"><?php echo $description1; ?></p>
+                    <?php endif; ?>
+                    <?php if (!empty($description2)): ?>
+                        <p class="index-module--description--c0179"><?php echo $description2; ?></p>
+                    <?php endif; ?>
+                </div>
+                <ul class="index-module--listItem--1a5cc">
+                    <?php foreach ($yt_feature_cards as $card): ?>
+                        <li class="index-module--list--d72e8">
+                            <div class="index-module--image--692c9" style="background: <?php echo htmlspecialchars($card['color']); ?>">
+                                <?php if (!empty($card['image'])): ?>
+                                    <img src="<?php echo htmlspecialchars($card['image']); ?>" alt="<?php echo htmlspecialchars($card['image_alt']); ?>" height="140" loading="lazy">
                                 <?php endif; ?>
                             </div>
-                        </form>
-                       <div id="target" class="">
-    			</div>
-                        <div id="downloadOptions" style="display:none; margin-top:20px;"></div>
-                    </div>
-                </div>
-            </section>
-            <!--  -->
-            <?php if ($download_app_enabled): ?>
-            <div class="text__container mt-10">
-                            <div class="ig-section">
-                        <div class="ig-gr-content section-app-insta">
-                            <div class="shapes-right"></div>
-                            <div class="shapes-left"></div>
-                            <div class="section-app-download">
-                                <div class="app-text">
-                                    <h2 class="title-white"><?php echo isset($current_lang['download_app_title']) && $current_lang['download_app_title'] !== '' ? htmlspecialchars($current_lang['download_app_title']) : 'Download the TikTokio  app for Android'; ?></h2>
-                                    <p><?php echo isset($current_lang['download_app_description']) && $current_lang['download_app_description'] !== '' ? htmlspecialchars($current_lang['download_app_description']) : 'We have developed an application for Android devices. It helps to download images, videos from Instagram in just one step.'; ?></p>
-                                </div>
-                                <div class="center"><a
-
-                                        href=""
-
-                                        target="_blank" rel="nofollow noopener"><img src="assets/images/play.png" style="width:200px;" alt="Google Playstore"></a></div>
-
+                            <div class="index-module--desList--a96a6">
+                                <?php if (!empty($card['title'])): ?>
+                                    <h3><?php echo htmlspecialchars($card['title']); ?></h3>
+                                <?php endif; ?>
+                                <?php if (!empty($card['body'])): ?>
+                                    <p class="index-module--boxDes--f82b1"><?php echo htmlspecialchars($card['body']); ?></p>
+                                <?php endif; ?>
                             </div>
-                        </div>
-                    </div>
-                        </div>
-            <?php endif; ?>
-            <!--  -->
-            <div >
-                <div class="content-visibility">
-                    <section class="text">
-                        <div class="text__container">
-                            <h2> <?php echo $title1; ?></h2>
-                         <?php
-
-                            // Set timezone to Pakistan
-
-                            date_default_timezone_set('Asia/Karachi');
-
-                            
-
-                            // Check if site is enabled
-
-                            $site_enabled = true; // Default to enabled
-
-                            $check_settings = $conn->query("SELECT site_status FROM site_settings LIMIT 1");
-
-                            if ($check_settings && $check_settings->num_rows > 0) {
-
-                                $settings = $check_settings->fetch_assoc();
-
-                                $site_enabled = ($settings['site_status'] == 1);
-
-                            }
-
-                            
-
-                            // Only show last updated time if site is enabled
-
-                            if ($site_enabled) {
-
-                                echo '<p style="color:#252e69;font-size: 1em;font-weight:400;">Last updated: ' . date('d M Y H:i:s') . '</p>';
-
-                            }
-
-                            ?>
-                            <div class="text__desc" style="margin-top:10px">
-                                <?php echo $description1; ?> 
-                            </div>
-                        </div>
-                    </section>
-                    <section class="text">
-                        <div class="b-blk" >
-                            <h3><?php echo $how_to_download_heading; ?></h3>
-<ol>
-    <?php if (!empty($add_columns_steps)): ?>
-        <?php foreach ($add_columns_steps as $step): ?>
-            <li itemprop="step" itemscope itemtype="https://schema.org/HowToStep">
-                <b itemprop="name"><?php echo htmlspecialchars($step['heading'] ?? ''); ?></b> - 
-                <span itemprop="text">
-                    <?php 
-                        // Check if the description has an image reference or normal text
-                        $description = $step['description'] ?? '';
-                        if (strpos($description, 'image:') !== false): 
-                            // Extract image reference and display it inside span
-                            $image_url = str_replace('image:', '', $description);
-                            echo '<img src="' . htmlspecialchars($image_url) . '" alt="Image Reference">';
-                        else:
-                            // If no image reference, just print the normal text inside span
-                            echo processContentForDisplay($description); 
-                        endif; 
-                    ?>
-                </span>
-            </li>
-        <?php endforeach; ?>
-    <?php else: ?>
-        <li><b><?php echo $add_columns; ?></b> - <span></span></li>
-    <?php endif; ?>
-</ol>
-                        </div>
-                    </section>
-                    <section id="six__items">
-                    
-    <div class="container">
-        <div class="six__items_header">
-            <?php echo $description_bottom; ?>
-        </div>
-        <div class="six-i-1w">
-            <?php if (!empty($images_data)): ?>
-                <?php foreach ($images_data as $index => $img_data): ?>
-                    <div class="six-i-i">
-                        <div class="six-i-i-img">
-                            <img src="/admin/<?php echo htmlspecialchars($img_data['image']); ?>" 
-                                 alt="<?php echo htmlspecialchars(basename($img_data['image'])); ?>" 
-                                 height="110" width="110">
-                        </div>
-                        <div class="six-i-t">
-                            <?php echo processContentForDisplay($img_data['description'] ?? ''); ?>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <!-- Optional: You can display a message or empty state here if needed -->
-            <?php endif; ?>
-        </div> <!-- Close div for six-i-1w -->
-    </div> <!-- Close div for container -->
-</section> <!-- Close section -->
-
-                       <section>
-                            <div class="main__content">
-                            <div class="main-c-c">
-                                <div class="info-arrow">
-                                    <?php if (!empty($pink_title1_2)): ?>
-                                        <span><?php echo $pink_title1_2; ?></span><img src="assets/images/zTSA0a37KlUL.svg"
-                                        alt="" width="54">
-                                    <?php endif; ?>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <div class="index-module--sectionDownType--47efd">
+                <h2>Download Youtube videos Free using <?php echo htmlspecialchars($site_title); ?></h2>
+                <ul class="index-module--listIcon--bdeff">
+                    <?php foreach ($download_formats as $format): ?>
+                        <li class="index-module--listIconImg--af887">
+                            <span><?php echo htmlspecialchars($format); ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+                <?php if (!empty($download_paragraph)): ?>
+                    <p class="index-module--description--c0179"><?php echo h($download_paragraph); ?></p>
+                <?php endif; ?>
+                <button class="index-module--convertNext--c8b34" type="button" data-submit-form="tiktok_form"><?php echo $download_label_text; ?></button>
+            </div>
+            <div class="index-module--sectionCount--c6628">
+                <h2><?php echo $how_to_download_heading ?: 'How to download YouTube videos online in 3 Simple Steps'; ?></h2>
+                <ul class="index-module--listCount--2de4c">
+                    <?php foreach ($yt_steps as $idx => $step_text): ?>
+                        <?php $palette = $step_palette[$idx % count($step_palette)]; ?>
+                        <li class="index-module--listWrapper--c4450">
+                            <span class="index-module--listStep--b4a0d" style="background: <?php echo $palette['bg']; ?>; color: <?php echo $palette['fg']; ?>"><?php echo $idx + 1; ?></span>
+                            <span class="index-module--listText--a7d52"><?php echo htmlspecialchars($step_text); ?></span>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <div class="index-module--sectionQue--727d3" itemscope itemtype="https://schema.org/FAQPage">
+                <h2><?php echo htmlspecialchars($faq_section_title); ?></h2>
+                <div>
+                    <?php if (!empty($faqs)): ?>
+                        <?php foreach ($faqs as $faq_item): ?>
+                            <div class="index-module--answer--3d9d8" itemscope itemprop="mainEntity" itemtype="https://schema.org/Question">
+                                <button class="index-module--faqToggle--aa9ab" type="button" data-faq-toggle aria-expanded="false">
+                                    <span itemprop="name"><?php echo htmlspecialchars($faq_item['question']); ?></span>
+                                    <span aria-hidden="true">+</span>
+                                </button>
+                                <div itemprop="acceptedAnswer" itemscope itemtype="https://schema.org/Answer" data-faq-content>
+                                    <div itemprop="text"><?php echo processContentForDisplay($faq_item['answer']); ?></div>
                                 </div>
                             </div>
-                            <div class="main-c-c u-m-bottom d-flex">
-                                <div class="u-smaller-text flex-1 align-items-center text text--text">
-                                <h3><?php echo $title1_2; ?> </h3>
-                                <?php echo $description1_2; ?>
-                                </div>
-                                <div class="d-flex align-items-center text--image">
-                                    <div class="flex-1 img-w">
-                                        <img src="/admin/<?php echo $image1; ?>" width="416" height="289" alt="tiktok android">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="main-c-c u-m-bottom d-flex">
-                                <div class="d-flex text-pr align-items-center text--image">
-                                    <div class="flex-1 img-w">
-                                        <img src="/admin/<?php echo $image2; ?>" width="368" height="321" alt="download tiktok video pc">
-                                    </div>
-                                </div>
-                                <div class="u-smaller-text flex-1 align-items-center text text--text">
-                                    <h3><?php echo $title2_2; ?></h3>
-                                    <?php echo $description2_2; ?>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                     <section class="text">
-                        <div class="text__container">
-                            <h2> <?php echo $title2; ?></h2>
-                            <div class="text__desc">
-                                <?php echo $description2; ?>
-                            </div>
-                        </div>
-                    </section>
-
-                   <?php
-
-                    $faq_lang_id = $current_lang_id; // Use current language ID for FAQs
-
-                    $faqs = [];
-
-                    // Check if FAQs are enabled for this language
-
-                    $lang_check = $conn->query("SELECT faqs_enabled FROM languages WHERE id=$faq_lang_id LIMIT 1");
-
-                    if ($lang_check && $lang_check->num_rows > 0) {
-
-                        $lang_data = $lang_check->fetch_assoc();
-
-                        if ($lang_data['faqs_enabled'] == 1) { // only proceed if enabled
-
-                            $faq_res = $conn->query("SELECT question, answer FROM language_faqs WHERE language_id=$faq_lang_id ORDER BY id ASC");
-
-                            if ($faq_res && $faq_res->num_rows > 0) {
-
-                                while ($faq = $faq_res->fetch_assoc()) {
-
-                                    $faqs[] = $faq;
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-                    ?>
-                    <section id="accordion">
-                        <div class="accordion__container" id="dynamicFaqContainer">
-                            <!-- Dynamic FAQ will be rendered here -->
-                        </div>
-                        <div style="margin-top:20px;">
-                            <button id="nextFaqBtn" style="display:none;">Next</button>
-                        </div>
-                    </section>
-                    <script>
-                    const faqs = <?php echo json_encode($faqs); ?>;
-                    function renderFaqs() {
-                        const container = document.getElementById('dynamicFaqContainer');
-                        if (!faqs.length) {
-                            container.innerHTML = '<div>No FAQs available.</div>';
-                            return;
-                        }
-                        let html = '';
-                        for (let idx = 0; idx < faqs.length; idx++) {
-                            const faq = faqs[idx];
-                            const qid = 'faq-drawer-' + idx;
-                            const panelid = 'panel-' + idx;
-                            html += `
-                                <div  class="faq-drawer">
-                                    <input class="faq-d-t" id="${qid}" type="checkbox" />
-                                    <label class="faq-drawer__title accordion" for="${qid}" itemprop="name">${faq.question}</label>
-                                    <div class="panel faq-d-w" data-panel="${panelid}" >
-                                        <div itemprop="text" class="faq-drawer__content">${faq.answer}</div>
-                                    </div>
-                                </div>
-                            `;
-
-                        }
-
-                        container.innerHTML = html;
-
-                    }
-
-                    document.addEventListener('DOMContentLoaded', function() {
-
-                        renderFaqs();
-
-                    });
-
-                    </script>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="index-module--description--c0179"><?php echo htmlspecialchars($current_lang['faq_empty_state'] ?? 'FAQ content will be available soon.'); ?></p>
+                    <?php endif; ?>
                 </div>
             </div>
-        </main>
+        </div>
+    </div>
+
+
+
     <?php
 
     // Use the language variables already set at the top of index.php
@@ -1328,233 +1254,24 @@ foreach ($footer_pages as $page) {
     }
 
     ?>
-    <footer id="footer">
-        <div class="footer__container d-flex justify-content-between">
-            <div class="flex-1">
+    <footer class="index-module--footer--8d7ca">
+        <?php if (!empty($enabled_links)): ?>
+            <div class="index-module--menuLists--9277c">
+                <?php foreach ($enabled_links as $link): ?>
+                    <a class="index-module--menuLinks--be8de" href="<?php echo htmlspecialchars($link['url']); ?>"><?php echo htmlspecialchars($link['label']); ?></a>
+                <?php endforeach; ?>
             </div>
-            <div class="flex-2">
-                <nav class="footer__navigation flex-column">
-                    <div class="footer-row row-1">
-                        <?php foreach ($enabled_links as $link): ?>
-                            <a href="<?php echo htmlspecialchars($link['url']); ?>" target="_self"><?php echo htmlspecialchars($link['label']); ?></a>
-                        <?php endforeach; ?>
-                    </div>
-                </nav>
-            </div>
-            <div class="flex-1 lang-wrapper">
-                    <ul id="language-switcher">
-                        <li class="">
-                            <div id="menuLink1">
-                              <?php
-
-                        $active_lang = $current_lang;
-
-                        // Find the translated slug for the active language
-
-                        $translated_slug = '';
-
-                        if ($page_name) {
-
-                            $sql = "SELECT slug FROM language_pages WHERE language_id=" . intval($active_lang['id']) . " AND page_name='" . $conn->real_escape_string($page_name) . "' LIMIT 1";
-
-                            $res = $conn->query($sql);
-
-                            if ($res && $res->num_rows > 0) {
-
-                                $row = $res->fetch_assoc();
-
-                                $translated_slug = $row['slug'];
-
-                            }
-
-                        }
-
-                        if (!$translated_slug) {
-
-                            $sql = "SELECT slug FROM languages_home WHERE language_id=" . intval($active_lang['id']) . " LIMIT 1";
-
-                            $res = $conn->query($sql);
-
-                            if ($res && $res->num_rows > 0) {
-
-                                $row = $res->fetch_assoc();
-
-                                $translated_slug = $row['slug'];
-
-                            }
-
-                        }
-
-                        // Display as lang_code / slug
-
-                        if ($active_lang['is_default']) {
-
-                            echo htmlspecialchars($active_lang['name']) ;
-
-                        } else {
-
-                            echo htmlspecialchars($active_lang['name']) ;
-
-                        }
-                        ?>
-                        </div>
-                        <ul class="menu-children u-smaller-text u-shadow--black">
-                             <?php foreach ($languages as $lang): ?>
-                                <?php
-
-                                // Check if there's a translated slug for the current page in this language
-
-                                $translated_slug = '';
-
-                                $is_home_page = false;
-
-                                if ($page_name) {
-
-                                    // Check if this is a home page by looking in languages_home table
-
-                                    $sql = "SELECT slug FROM languages_home WHERE language_id=" . intval($lang['id']) . " AND page_name='" . $conn->real_escape_string($page_name) . "' LIMIT 1";
-
-                                    $res = $conn->query($sql);
-
-                                    if ($res && $res->num_rows > 0) {
-
-                                        $row = $res->fetch_assoc();
-
-                                        $translated_slug = $row['slug'];
-
-                                        $is_home_page = true;
-
-                                    } else {
-
-                                        // Try other tables for non-home pages
-
-                                        $sql = "SELECT slug FROM language_pages WHERE language_id=" . intval($lang['id']) . " AND page_name='" . $conn->real_escape_string($page_name) . "' LIMIT 1";
-
-                                        $res = $conn->query($sql);
-
-                                        if ($res && $res->num_rows > 0) {
-
-                                            $row = $res->fetch_assoc();
-
-                                            $translated_slug = $row['slug'];
-
-                                        } else {
-
-                                            // Try how_pages
-
-                                            $sql = "SELECT slug FROM how_pages WHERE language_id=" . intval($lang['id']) . " AND page_name='" . $conn->real_escape_string($page_name) . "' LIMIT 1";
-
-                                            $res = $conn->query($sql);
-
-                                            if ($res && $res->num_rows > 0) {
-
-                                                $row = $res->fetch_assoc();
-
-                                                $translated_slug = $row['slug'];
-
-                                            } else {
-
-                                                // Try mp3_pages
-
-                                                $sql = "SELECT slug FROM mp3_pages WHERE language_id=" . intval($lang['id']) . " AND page_name='" . $conn->real_escape_string($page_name) . "' LIMIT 1";
-
-                                                $res = $conn->query($sql);
-
-                                                if ($res && $res->num_rows > 0) {
-
-                                                    $row = $res->fetch_assoc();
-
-                                                    $translated_slug = $row['slug'];
-
-                                                } else {
-
-                                                    // Try stories_pages
-
-                                                    $sql = "SELECT slug FROM stories_pages WHERE language_id=" . intval($lang['id']) . " AND page_name='" . $conn->real_escape_string($page_name) . "' LIMIT 1";
-
-                                                    $res = $conn->query($sql);
-
-                                                    if ($res && $res->num_rows > 0) {
-
-                                                        $row = $res->fetch_assoc();
-
-                                                        $translated_slug = $row['slug'];
-
-                                                    }
-
-                                                }
-
-                                            }
-
-                                        }
-
-                                    }
-
-                                }
-
-                                // Build URL based on conditions
-
-                                if ($is_home_page && !empty($translated_slug)) {
-
-                                    // Home page with slug - use slug without language code
-
-                                    $lang_url = '/' . htmlspecialchars($translated_slug);
-
-                                } elseif (!empty($translated_slug)) {
-
-                                    // Non-home page with slug - always use language code + slug
-
-                                    if ($lang['is_default']) {
-
-                                        $lang_url = '/' . htmlspecialchars($translated_slug);
-
-                                    } else {
-
-                                        $lang_url = '/' . htmlspecialchars($lang['code']) . '/' . htmlspecialchars($translated_slug);
-
-                                    }
-
-                                } else {
-
-                                    // No slug exists
-
-                                    if ($lang['is_default']) {
-
-                                        $lang_url = '/';
-
-                                    } else {
-
-                                        $lang_url = '/' . htmlspecialchars($lang['code']);
-
-                                    }
-                                }
-                                ?>
-                                <li class="menu-item <?php if ($lang['id'] == $active_lang['id']) echo ' active'; ?>">
-                                <a href="<?php echo $lang_url; ?>" 
-                                       data-lang="<?php echo htmlspecialchars($lang['code']); ?>" 
-                                       data-url="<?php echo $lang_url; ?>" 
-                                       class="menu-link language-switch-link">
-                                       <img src="/admin/<?php echo htmlspecialchars($lang['image']); ?>" alt="" style="width:20px">    
-                                        <?php echo htmlspecialchars($lang['name']); ?>
-                                    </a>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                        </ul>
-                </div>
-        </div>
-        <div class="text-center">
-        <?php if ($copyright_enabled && $copyright_content): ?>
-            <div class="author-info">
-                <?php echo $copyright_content; ?>
-            </div>
-            <?php endif; ?>
-        </div>
-
+        <?php endif; ?>
+        <?php if ($copyright_enabled && !empty($copyright_content)): ?>
+            <div class="index-module--copyright--8627e"><?php echo $copyright_content; ?></div>
+        <?php else: ?>
+            <p class="index-module--copyright--8627e">&copy; <?php echo date('Y'); ?> <?php echo htmlspecialchars($site_title); ?></p>
+        <?php endif; ?>
     </footer>
     <script src="/assets/js/yCLRZN5bZzQA.js" defer></script>
+    <script src="/assets/js/yt1s.js" defer></script>
     <script src="/assets/js/index.js" defer></script>
-     <script src="/assets/js/navigation.js" defer></script>
+    <script src="/assets/js/navigation.js" defer></script>
     <?php
     // Fetch global_footer content
 
