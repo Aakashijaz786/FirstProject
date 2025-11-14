@@ -62,7 +62,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if (!$media_url) {
                         $error_message = 'Media URL missing.';
                     } else {
+<<<<<<< HEAD
                         $provider = $search_sessions['provider'];
+=======
+                        // Use current active provider from database, not cached from search session
+                        // Force refresh to ensure we get the latest value after admin changes
+                        $provider = get_active_api_provider($conn, true);
+>>>>>>> 8ebeba8d92f90dee34c5c4b2f95c8e1979a3f284
                         $api_response = media_api_download(
                             $conn,
                             $media_url,
