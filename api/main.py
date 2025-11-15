@@ -100,8 +100,7 @@ async def search_media(payload: SearchRequest, _: None = Depends(require_interna
 async def download_media(payload: DownloadRequest, _: None = Depends(require_internal_key)):
     site_profile = get_site_profile()
     provider = build_provider(payload.provider or settings.default_provider, site_profile)
-    if provider.key == 'iframe':
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Iframe provider does not support direct downloads")
+    # Iframe provider now supports downloads via freeapi.cyou
 
     result = await provider.download(payload)
     token = uuid.uuid4().hex
