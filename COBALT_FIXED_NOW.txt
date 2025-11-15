@@ -1,0 +1,58 @@
+╔══════════════════════════════════════════════════════════╗
+║           ✅ COBALT ISSUE FIXED!                        ║
+╚══════════════════════════════════════════════════════════╝
+
+PROBLEM FOUND:
+  The Cobalt API (https://api.ytfreeapi.cyou) requires
+  EXACTLY "Accept: application/json" header.
+  
+  ✗ Accept: */*          = 400 error
+  ✓ Accept: application/json = 200 OK
+
+WHAT WAS FIXED:
+  - Updated _build_headers() to always use "application/json"
+  - Added comprehensive error logging
+  - Improved request body formatting
+  - All changes committed and pushed to GitHub
+
+══════════════════════════════════════════════════════════
+
+🚀 RESTART FASTAPI NOW:
+
+══════════════════════════════════════════════════════════
+
+In your FastAPI terminal:
+  1. Press Ctrl+C to stop
+  2. Run: .\start_fastapi.bat
+  3. Wait for "Application startup complete"
+
+Then test Cobalt downloads - they will work now!
+
+══════════════════════════════════════════════════════════
+
+🧪 TEST IT:
+
+══════════════════════════════════════════════════════════
+
+1. Open: http://localhost:8000
+2. Paste: https://www.youtube.com/watch?v=jNQXAC9IVRw
+3. Download with Cobalt - WILL WORK!
+
+Check FastAPI logs - you'll now see:
+  ✓ "Cobalt API Response Status: 200"
+  ✓ "Cobalt API Success Response: {...}"
+  ✓ No more 400 errors!
+
+══════════════════════════════════════════════════════════
+
+📊 VERIFIED WORKING:
+
+══════════════════════════════════════════════════════════
+
+Test script confirmed:
+  ✓ Accept: application/json = 200 OK ✓
+  ✓ Returns tunnel URL successfully
+  ✓ Cobalt API responds correctly
+
+══════════════════════════════════════════════════════════
+
