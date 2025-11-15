@@ -12,7 +12,7 @@ if (!function_exists('yt_frontend_registry')) {
             'navMP3' => ['group' => 'Navigation', 'label' => 'Nav: Youtube to MP3', 'type' => 'text', 'render' => 'text', 'selector' => '.nav .nav-link:nth-of-type(2)'],
             'navMP4' => ['group' => 'Navigation', 'label' => 'Nav: Youtube to MP4', 'type' => 'text', 'render' => 'text', 'selector' => '.nav .nav-link:nth-of-type(3)'],
         ];
-        
+
         $imageFields = [
             'logoImage' => ['group' => 'Images', 'label' => 'Logo Image', 'type' => 'image', 'render' => 'src', 'selector' => '.logo-image', 'attribute' => 'src'],
             'feature1Icon' => ['group' => 'Images', 'label' => 'Feature 1 Icon', 'type' => 'image', 'render' => 'src', 'selector' => '.features-section .feature-card:nth-of-type(1) .feature-icon', 'attribute' => 'src'],
@@ -277,6 +277,20 @@ if (!function_exists('yt_frontend_fields')) {
     }
 }
 
+if (!function_exists('yt_frontend_normalize_image_path')) {
+    function yt_frontend_normalize_image_path(string $value): string
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return '';
+        }
+        if (preg_match('#^https?://#i', $trimmed)) {
+            return $trimmed;
+        }
+        return ltrim($trimmed, '/');
+    }
+}
+
 if (!function_exists('yt_frontend_defaults')) {
     function yt_frontend_defaults(string $pageKey): array
     {
@@ -290,6 +304,34 @@ if (!function_exists('yt_frontend_mode')) {
     {
         $registry = yt_frontend_registry();
         return $registry[$pageKey]['mode'] ?? 'data_i18n';
+    }
+}
+
+if (!function_exists('yt_frontend_apply_image_defaults')) {
+    function yt_frontend_apply_image_defaults(array $values, string $pageKey): array
+    {
+        $fields = yt_frontend_fields($pageKey);
+        $defaults = yt_frontend_defaults($pageKey);
+        foreach ($fields as $key => $meta) {
+            if (($meta['type'] ?? '') === 'image') {
+                $current = isset($values[$key]) ? yt_frontend_normalize_image_path((string)$values[$key]) : '';
+                $values[$key] = $current;
+                if ($current === '') {
+                    $values[$key] = $defaults[$key] ?? ($values[$key] ?? '');
+                    continue;
+                }
+                if (!preg_match('#^https?://#i', $current)) {
+                    $relative = ltrim($current, '/');
+                    $filePath = __DIR__ . '/../updated_frontend/client_frontend/' . $relative;
+                    if (!file_exists($filePath)) {
+                        $values[$key] = $defaults[$key] ?? $relative;
+                    } else {
+                        $values[$key] = $relative;
+                    }
+                }
+            }
+        }
+        return $values;
     }
 }
 
@@ -395,7 +437,7 @@ if (!function_exists('yt_frontend_resolve_strings')) {
                 $resolved = array_merge($resolved, $langStrings);
             }
         }
-        return $resolved;
+        return yt_frontend_apply_image_defaults($resolved, $pageKey);
     }
 }
 

@@ -37,6 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $site_status = isset($_POST['site_status']) ? 1 : 0; // Enable/Disable status
 
     $download_app_enabled = isset($_POST['download_app_enabled']) ? 1 : 0; // Download App section enable/disable
+    $mp3_page_enabled = isset($_POST['mp3_page_enabled']) ? 1 : 0; // MP3 page visibility
 
     
 
@@ -104,6 +105,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             }
 
+            // Check if mp3_page_enabled column exists, if not add it
+            $check_mp3_page = $conn->query("SHOW COLUMNS FROM site_settings LIKE 'mp3_page_enabled'");
+            if ($check_mp3_page->num_rows == 0) {
+                $conn->query("ALTER TABLE site_settings ADD COLUMN mp3_page_enabled TINYINT(1) DEFAULT 1");
+            }
+
         }
 
         
@@ -134,13 +141,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     site_status = ?,
 
-                    download_app_enabled = ?
+                    download_app_enabled = ?,
+
+                    mp3_page_enabled = ?
 
                     WHERE id = ?";
 
             $stmt = $conn->prepare($sql);
 
-            $stmt->bind_param('ssssiii', $site_name, $site_url, $site_email, $site_phone, $site_status, $download_app_enabled, $settings['id']);
+            $stmt->bind_param('ssssiiii', $site_name, $site_url, $site_email, $site_phone, $site_status, $download_app_enabled, $mp3_page_enabled, $settings['id']);
 
             
 
@@ -164,13 +173,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Insert new settings
 
-            $sql = "INSERT INTO site_settings (site_name, site_url, site_email, site_phone, site_status, download_app_enabled) 
+            $sql = "INSERT INTO site_settings (site_name, site_url, site_email, site_phone, site_status, download_app_enabled, mp3_page_enabled) 
 
-                    VALUES (?, ?, ?, ?, ?, ?)";
+                    VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             $stmt = $conn->prepare($sql);
 
-            $stmt->bind_param('ssssii', $site_name, $site_url, $site_email, $site_phone, $site_status, $download_app_enabled);
+            $stmt->bind_param('ssssiii', $site_name, $site_url, $site_email, $site_phone, $site_status, $download_app_enabled, $mp3_page_enabled);
 
             
 
@@ -340,6 +349,32 @@ if ($check_settings && $check_settings->num_rows > 0) {
                                                 <small class="text-muted d-block">
 
                                                     Enable or disable the website functionality
+
+                                                </small>
+
+                                            </label>
+
+                                        </div>
+
+                                    </div>
+
+                                    
+
+                                    <div class="mb-3">
+
+                                        <div class="form-check form-switch">
+
+                                            <input class="form-check-input" type="checkbox" id="mp3_page_enabled" name="mp3_page_enabled" 
+
+                                                   <?php echo (isset($current_settings['mp3_page_enabled']) && $current_settings['mp3_page_enabled'] == 1) ? 'checked' : ''; ?>>
+
+                                            <label class="form-check-label" for="mp3_page_enabled">
+
+                                                <strong>MP3 Page Visibility</strong>
+
+                                                <small class="text-muted d-block">
+
+                                                    Show or hide MP3 page button in admin panel
 
                                                 </small>
 

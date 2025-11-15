@@ -6,6 +6,18 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
 }
 require_once '../includes/config.php';
 
+// Get MP3 page visibility setting
+$check_mp3 = $conn->query("SHOW COLUMNS FROM site_settings LIKE 'mp3_page_enabled'");
+if (!$check_mp3 || $check_mp3->num_rows == 0) {
+    $conn->query("ALTER TABLE site_settings ADD COLUMN mp3_page_enabled TINYINT(1) DEFAULT 1");
+}
+
+$mp3_enabled = 1; // Default
+$settings_res = $conn->query("SELECT mp3_page_enabled FROM site_settings LIMIT 1");
+if ($settings_res && $settings_res->num_rows > 0) {
+    $settings = $settings_res->fetch_assoc();
+    $mp3_enabled = isset($settings['mp3_page_enabled']) ? (int)$settings['mp3_page_enabled'] : 1;
+}
 
 // Handle delete custom page (AJAX)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_custom_page_id'])) {
@@ -39,7 +51,7 @@ $pages = [
 ];
 array_unshift($pages,
     ['label' => 'YT1S Home', 'icon' => 'fa-house', 'link' => "yt_front_page.php?id=$lang_id&page=home", 'key' => null],
-    ['label' => 'YT1S MP3', 'icon' => 'fa-music', 'link' => "yt_mp3.php?id=$lang_id", 'key' => null],
+    ['label' => 'YT1S MP3', 'icon' => 'fa-music', 'link' => "yt_mp3.php?id=$lang_id", 'key' => 'mp3_page_enabled', 'special' => true],
     ['label' => 'YT1S MP4', 'icon' => 'fa-video', 'link' => "yt_mp4.php?id=$lang_id", 'key' => null]
 );
 
@@ -68,10 +80,10 @@ include 'includes/header.php';
 				</div>
 				<div class="card-body">
 					<div class="d-flex gap-2 flex-wrap">
-						<a class="btn btn-sm btn-outline-primary" href="yt_mp3.php?id=<?php echo $lang_id; ?>">Edit YouTube to MP3</a>
+						<a class="btn btn-sm btn-outline-primary" href="yt_mp3.php?id=<?php echo $lang_id; ?>" id="mp3-edit-btn" style="<?php echo ($mp3_enabled == 1) ? '' : 'display:none;'; ?>">Edit YouTube to MP3</a>
 						<a class="btn btn-sm btn-outline-primary" href="yt_mp4.php?id=<?php echo $lang_id; ?>">Edit YouTube to MP4</a>
 					</div>
-					<p class="text-muted small mb-0 mt-2">These editors update the dynamic texts shown on the YT1s MP3/MP4 pages without changing the frontend files.</p>
+					<p class="text-muted small mb-0 mt-2">These editors update the dynamic texts shown on the YT1s pages without changing the frontend files.</p>
 				</div>
 			</div>
              <?php if (isset($_GET['deleted']) && $_GET['deleted'] == '1'): ?>
@@ -90,11 +102,15 @@ include 'includes/header.php';
                         $exists = isset($existing_pages[$slug]) || isset($existing_pages[strtolower($page['label'])]);
                     ?>
                     <?php if (!$exists): ?>
+                        <?php 
+                        // Special handling for MP3 page was removed at user's request.
+                        // Render MP3 card like a normal page card, without a toggle on the card itself.
+                        ?>
                         <div class="page-card-wrapper" style="display:inline-block; margin:10px; vertical-align:top;">
                             <a href="<?php echo $page['link']; ?>" class="page-card">
                                 <span class="page-icon"><i class="fa-solid <?php echo $page['icon']; ?>"></i></span>
                                 <span class="page-label"><?php echo $page['label']; ?></span>
-                                <?php if (!empty($page['key'])): ?>
+                                <?php if (!empty($page['key']) && $page['key'] !== 'mp3_page_enabled'): ?>
                                     <div class="form-check form-switch mt-2 text-center">
                                         <input class="form-check-input page-toggle" type="checkbox" id="toggle_<?php echo $page['key']; ?>" data-pagekey="<?php echo $page['key']; ?>" data-langid="<?php echo $lang_id; ?>" <?php echo (isset($lang[$page['key']]) && $lang[$page['key']]) ? 'checked' : ''; ?> >
                                         <label class="form-check-label" for="toggle_<?php echo $page['key']; ?>">
@@ -106,9 +122,6 @@ include 'includes/header.php';
                         </div>
                     <?php endif; ?>
                 <?php endforeach; ?>
-                <div class="alert alert-info mt-4">
-                    Custom pages are disabled in this build. Existing entries remain read-only.
-                </div>
             </div>
         </div>
     </div>
@@ -122,6 +135,7 @@ include 'includes/header.php';
             mainContent.classList.toggle('collapsed');
         });
 
+        // Regular page toggles
         document.querySelectorAll('.page-toggle').forEach(function(toggle) {
             toggle.addEventListener('change', function() {
                 var pageKey = this.getAttribute('data-pagekey');

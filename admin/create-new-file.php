@@ -22,12 +22,9 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
 }
 require_once '../includes/config.php';
 
-$feature_message = 'Custom page creation has been disabled. Existing content remains accessible for reference only.';
 include 'includes/header.php';
 ?>
 <div class="main-content" id="mainContent">
-    <div class="alert alert-info m-4"><?php echo $feature_message; ?></div>
-</div>
 <?php
 include 'includes/footer.php';
 exit;

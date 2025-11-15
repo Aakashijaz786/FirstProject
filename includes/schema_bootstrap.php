@@ -121,6 +121,8 @@ if (!function_exists('bootstrap_core_schema')) {
         ensure_column($conn, 'site_settings', 'active_api_provider', " `active_api_provider` VARCHAR(50) DEFAULT 'ytdlp' AFTER `fastapi_auth_key` ");
         // Home FAQ visibility toggle
         ensure_column($conn, 'site_settings', 'faq_enabled', " `faq_enabled` TINYINT(1) DEFAULT 1 AFTER `download_app_enabled` ");
+        // MP3 page visibility toggle
+        ensure_column($conn, 'site_settings', 'mp3_page_enabled', " `mp3_page_enabled` TINYINT(1) DEFAULT 1 AFTER `download_app_enabled` ");
 
         // Per-language Home page FAQs support
         ensure_column($conn, 'languages_home', 'faqs_enabled', " `faqs_enabled` TINYINT(1) DEFAULT 1 ");

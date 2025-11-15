@@ -790,8 +790,11 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
                 } else if (element.tagName === 'A') {
                     element.textContent = value;
                 } else if (element.tagName === 'IMG') {
-                    // Handle image src
-                    element.src = value.startsWith('http') ? value : '/' + value;
+                    // Handle image src - only update if value is not empty
+                    if (value && value.trim() !== '') {
+                        element.src = value.startsWith('http') ? value : value;
+                    }
+                    // If empty, keep the original src (default image from HTML)
                 } else {
                     // Check if value contains HTML
                     if (value.includes('<') || value.includes('&lt;')) {
@@ -808,7 +811,9 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
             const key = img.getAttribute('data-image-key');
             if (key && strings[key]) {
                 const value = strings[key];
-                img.src = value.startsWith('http') ? value : '/' + value;
+                if (value && value.trim() !== '') {
+                    img.src = value.startsWith('http') ? value : value;
+                }
             }
         });
         
