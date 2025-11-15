@@ -7,6 +7,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
+import logging
 
 try:
     import orjson
@@ -24,6 +25,9 @@ except Exception:  # pragma: no cover - optional dependency
     MP4 = None  # type: ignore
 
 from .settings import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 def slugify(value: str, fallback: str = "media") -> str:
@@ -156,9 +160,12 @@ def apply_branding_metadata(file_path: Path, site_name: str, title: str) -> None
         # Note: EasyID3 doesn't support 'comment', skip it
         tags.save(file_path)
     elif suffix in ('.mp4', '.m4a') and MP4:
-        mp4 = MP4(file_path)  # type: ignore
-        mp4['\xa9ART'] = [site_name]
-        mp4['\xa9alb'] = [site_name]
-        mp4['\xa9cmt'] = [f"Downloaded via {site_name}"]
-        mp4['\xa9nam'] = [title or file_path.stem]
-        mp4.save(file_path)
+        try:
+            mp4 = MP4(file_path)  # type: ignore
+            mp4['\xa9ART'] = [site_name]
+            mp4['\xa9alb'] = [site_name]
+            mp4['\xa9cmt'] = [f"Downloaded via {site_name}"]
+            mp4['\xa9nam'] = [title or file_path.stem]
+            mp4.save(file_path)
+        except Exception as exc:  # pragma: no cover - best effort tagging
+            logger.warning("Failed to write MP4 metadata for %s: %s", file_path, exc)

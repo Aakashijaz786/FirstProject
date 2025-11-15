@@ -4,7 +4,8 @@ import asyncio
 import shutil
 import uuid
 import logging
-from typing import Any, Dict
+from pathlib import Path
+from typing import Any, Dict, Optional
 from urllib.parse import parse_qs, urlparse
 
 import httpx
@@ -19,6 +20,12 @@ logger = logging.getLogger(__name__)
 
 class CobaltProvider(ProviderBase):
     key = 'cobalt'
+
+    AUDIO_BITRATES = ["320", "256", "128", "96", "64", "8"]
+    VIDEO_QUALITIES = ["max", "4320", "2160", "1440", "1080", "720", "480", "360", "240", "144"]
+    AUDIO_FORMATS = ["best", "mp3", "ogg", "wav", "opus"]
+    FILENAME_STYLES = ["classic", "pretty", "basic", "nerdy"]
+    DOWNLOAD_MODES = ["auto", "audio", "mute"]
 
     async def search(self, payload: SearchRequest) -> Dict[str, Any]:
         # Cobalt is primarily a direct-download API. Return a normalized stub.
@@ -48,7 +55,8 @@ class CobaltProvider(ProviderBase):
 
         final_request_body = request_body
 
-        async with httpx.AsyncClient(timeout=self.settings.cobalt_timeout_seconds) as client:
+        base_timeout = httpx.Timeout(self.settings.cobalt_timeout_seconds, connect=10)
+        async with httpx.AsyncClient(timeout=base_timeout) as client:
             while True:
                 try:
                     response = await client.post(base_url, json=final_request_body, headers=request_headers)
@@ -71,11 +79,8 @@ class CobaltProvider(ProviderBase):
                         f"Cobalt API request failed: {exc}"
                     ) from exc
 
-            # Handle different response formats
-            # Tunnel response: {"status": "tunnel", "url": "...", "filename": "..."}
-            # Direct response: {"url": "...", "filename": "..."}
             api_status = data.get('status', '')
-            download_url = data.get('url') or data.get('audio') or data.get('video') or data.get('download_url')
+            download_url = self._resolve_download_url(api_status, data)
             
             if not download_url:
                 raise HTTPException(
@@ -84,10 +89,11 @@ class CobaltProvider(ProviderBase):
                 )
 
             # Get filename from API response or use title
-            api_filename = data.get('filename', '')
-            extension = data.get('ext') or self._infer_extension(download_url, payload.format)
+            api_filename = self._resolve_filename(data)
+            extension = (Path(api_filename).suffix[1:] if api_filename else None) or data.get('ext')
+            extension = extension or self._infer_extension(download_url, payload.format)
             site_name = payload.site_name or self.context.site_profile.get('site_name') or 'TikTok Downloader'
-            title = data.get('title') or payload.title_override or api_filename or 'media'
+            title = self._resolve_title(data, payload, api_filename)
             final_name = brand_file_name(site_name, title, extension)
             tmp_path = self.settings.storage_work / f"cobalt-{uuid.uuid4().hex}.{extension}"
             final_path = self.settings.storage_ready / final_name
@@ -99,7 +105,7 @@ class CobaltProvider(ProviderBase):
             )
 
             try:
-                async with client.stream('GET', download_url, headers=download_headers) as stream:
+                async with client.stream('GET', download_url, headers=download_headers, timeout=None) as stream:
                     stream.raise_for_status()
                     with tmp_path.open('wb') as handle:
                         async for chunk in stream.aiter_bytes():
@@ -130,6 +136,12 @@ class CobaltProvider(ProviderBase):
             "provider": self.key,
             "api_payload": final_request_body,
         }
+        output_meta = data.get('output', {})
+        if isinstance(output_meta, dict):
+            metadata.update({
+                "output": output_meta,
+                "service": data.get('service')
+            })
 
         return DownloadResult(
             file_path=final_path,
@@ -140,52 +152,60 @@ class CobaltProvider(ProviderBase):
 
     def _build_request_body(self, payload: DownloadRequest) -> Dict[str, Any]:
         """
-        Match the payload structure expected by https://api.ytfreeapi.cyou.
-
-        Audio (mp3):
-        {
-            "url": "...",
-            "audioFormat": "mp3",
-            "downloadMode": "audio",
-            "filenameStyle": "basic",
-            "youtubeHLS": true
-        }
-
-        Video (mp4):
-        {
-            "url": "...",
-            "audioFormat": "mp3",
-            "videoQuality": "1080",
-            "filenameStyle": "basic",
-            "youtubeHLS": true
-        }
-        
-        Note: downloadMode is ONLY for audio, not video!
+        Map DownloadRequest into cobalt's API schema.
         """
         config = self.context.state.get('config') or {}
-        filename_style = config.get('filename_style', 'basic')
-        youtube_hls = config.get('youtube_hls', True)
-        audio_format = config.get('audio_format', 'mp3')
-        default_video_quality = str(config.get('video_quality_default', '1080'))
-
         is_audio = payload.format in ('mp3', 'audio')
-        requested_quality = payload.quality or (None if is_audio else default_video_quality)
+        url = self._normalize_media_url(payload.url)
 
-        body: Dict[str, Any] = {
-            "url": self._normalize_media_url(payload.url),
-            "audioFormat": audio_format,
+        filename_style = self._choose_option(
+            self.FILENAME_STYLES,
+            config,
+            ['filename_style', 'filenameStyle'],
+            default='basic',
+        )
+        download_mode = self._determine_download_mode(config, is_audio)
+
+        request: Dict[str, Any] = {
+            "url": url,
             "filenameStyle": filename_style,
-            "youtubeHLS": bool(youtube_hls),
+            "downloadMode": download_mode,
         }
 
-        if is_audio:
-            # Only add downloadMode for audio requests
-            body["downloadMode"] = "audio"
-        else:
-            # For video, only add videoQuality (no downloadMode)
-            body["videoQuality"] = str(requested_quality or default_video_quality)
+        codec = self._config_str(config, ['youtube_video_codec', 'youtubeVideoCodec'])
+        if codec:
+            request['youtubeVideoCodec'] = codec
 
-        return body
+        if not is_audio:
+            container = self._config_str(config, ['youtube_video_container', 'youtubeVideoContainer'])
+            if container:
+                request['youtubeVideoContainer'] = container
+
+        if download_mode == 'audio':
+            request['audioFormat'] = self._choose_option(
+                self.AUDIO_FORMATS,
+                config,
+                ['audio_format', 'audioFormat'],
+                default='mp3' if payload.format in ('mp3', 'audio') else 'best',
+            )
+            request['audioBitrate'] = self._resolve_audio_bitrate(
+                payload.quality,
+                config.get('audio_bitrate') or config.get('audioBitrate')
+            )
+        else:
+            request['videoQuality'] = self._resolve_video_quality(
+                payload.quality,
+                config.get('video_quality_default') or config.get('videoQuality') or '1080'
+            )
+            language = self._config_str(config, ['youtube_dub_lang', 'youtubeDubLang'])
+            if language:
+                request['youtubeDubLang'] = language
+            subtitle_lang = self._config_str(config, ['subtitle_lang', 'subtitleLang'])
+            if subtitle_lang:
+                request['subtitleLang'] = subtitle_lang
+
+        # Remove keys with falsy/None values to avoid incompatible fields on older instances
+        return {key: value for key, value in request.items() if value not in (None, '')}
 
     @staticmethod
     def _safe_json(response: httpx.Response | None) -> Dict[str, Any] | None:
@@ -202,8 +222,6 @@ class CobaltProvider(ProviderBase):
         current_body: Dict[str, Any],
         exc: httpx.HTTPStatusError,
     ) -> Dict[str, Any] | None:
-        if not current_body.get('youtubeHLS'):
-            return None
         payload = self._safe_json(exc.response)
         error_code = None
         if payload:
@@ -212,9 +230,65 @@ class CobaltProvider(ProviderBase):
                 error_code = error.get('code')
         if error_code == 'error.api.content.video.unavailable':
             fallback = dict(current_body)
-            fallback['youtubeHLS'] = False
-            return fallback
+            if fallback.get('downloadMode') == 'audio':
+                bitrate = fallback.get('audioBitrate')
+                degraded = self._lower_audio_bitrate(bitrate)
+                if degraded and degraded != bitrate:
+                    fallback['audioBitrate'] = degraded
+                    return fallback
+            else:
+                quality = fallback.get('videoQuality')
+                degraded = self._lower_video_quality(quality)
+                if degraded and degraded != quality:
+                    fallback['videoQuality'] = degraded
+                    return fallback
         return None
+
+    def _resolve_download_url(self, status_label: str, payload: Dict[str, Any]) -> str:
+        if status_label in ('tunnel', 'redirect'):
+            download_url = payload.get('url') or payload.get('download_url')
+        elif status_label == 'local-processing':
+            tunnels = payload.get('tunnel') or []
+            download_url = tunnels[0] if tunnels else None
+        elif status_label == 'error':
+            error = payload.get('error') or {}
+            message = error.get('code', 'cobalt_error')
+            raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Cobalt API reported error: {message}")
+        elif status_label == 'picker':
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST,
+                "Cobalt returned multiple media items (picker). Please provide a direct video URL."
+            )
+        else:
+            download_url = payload.get('url') or payload.get('download_url')
+
+        if not download_url:
+            raise HTTPException(
+                status.HTTP_502_BAD_GATEWAY,
+                f"Cobalt API did not return a download url. Status: {status_label}, Response: {payload}"
+            )
+        return download_url
+
+    @staticmethod
+    def _resolve_filename(payload: Dict[str, Any]) -> Optional[str]:
+        if payload.get('filename'):
+            return payload['filename']
+        output = payload.get('output')
+        if isinstance(output, dict):
+            filename = output.get('filename')
+            if filename:
+                return filename
+        return None
+
+    @staticmethod
+    def _resolve_title(payload: Dict[str, Any], request: DownloadRequest, fallback_filename: Optional[str]) -> str:
+        return (
+            payload.get('title')
+            or (payload.get('output') or {}).get('metadata', {}).get('title')
+            or request.title_override
+            or fallback_filename
+            or 'media'
+        )
 
     @staticmethod
     def _raise_cobalt_http_error(exc: httpx.HTTPStatusError) -> None:
@@ -297,5 +371,106 @@ class CobaltProvider(ProviderBase):
         if query.get('list'):
             normalized += f"&list={query['list'][0]}"
         return normalized
+
+    @staticmethod
+    def _choose_option(options: list[str], config: Dict[str, Any], names: list[str], default: str) -> str:
+        value = None
+        for name in names:
+            if name in config and config[name] not in (None, ''):
+                value = config[name]
+                break
+        if isinstance(value, str):
+            candidate = value.strip().lower()
+            for option in options:
+                if candidate == option.lower():
+                    return option
+        elif value in options:
+            return value
+        return default
+
+    @staticmethod
+    def _config_str(config: Dict[str, Any], names: list[str], default: Optional[str] = None) -> Optional[str]:
+        for name in names:
+            if name in config and config[name]:
+                val = config[name]
+                if isinstance(val, str):
+                    stripped = val.strip()
+                    if stripped:
+                        return stripped
+                else:
+                    return str(val)
+        return default
+
+    def _determine_download_mode(self, config: Dict[str, Any], is_audio: bool) -> str:
+        if is_audio:
+            return 'audio'
+        preferred = self._config_str(config, ['download_mode', 'downloadMode'], 'auto')
+        preferred = (preferred or 'auto').lower()
+        return preferred if preferred in self.DOWNLOAD_MODES else 'auto'
+
+    def _resolve_audio_bitrate(self, requested_quality: Optional[str], configured_default: Optional[str]) -> str:
+        candidates = []
+        if requested_quality:
+            digits = self._extract_digits(requested_quality)
+            candidates.append(digits)
+        if configured_default:
+            candidates.append(self._extract_digits(configured_default) or configured_default)
+        candidates.append('128')
+
+        for candidate in candidates:
+            if not candidate:
+                continue
+            candidate = str(candidate)
+            if candidate in self.AUDIO_BITRATES:
+                return candidate
+        return '128'
+
+    def _resolve_video_quality(self, requested_quality: Optional[str], configured_default: Optional[str]) -> str:
+        candidates = []
+        if requested_quality:
+            digits = self._extract_digits(requested_quality)
+            candidates.append(digits or requested_quality)
+        if configured_default:
+            candidates.append(self._extract_digits(configured_default) or configured_default)
+        candidates.append('1080')
+
+        for candidate in candidates:
+            if not candidate:
+                continue
+            text = str(candidate).lower()
+            if text == 'max':
+                return 'max'
+            if text in self.VIDEO_QUALITIES:
+                return text
+            digits = self._extract_digits(text)
+            if digits and digits in self.VIDEO_QUALITIES:
+                return digits
+        return '1080'
+
+    @staticmethod
+    def _extract_digits(value: Optional[str]) -> Optional[str]:
+        if not value:
+            return None
+        digits = ''.join(ch for ch in str(value) if ch.isdigit())
+        return digits or None
+
+    def _lower_audio_bitrate(self, current: Optional[str]) -> Optional[str]:
+        if not current or current not in self.AUDIO_BITRATES:
+            return None
+        idx = self.AUDIO_BITRATES.index(current)
+        if idx == len(self.AUDIO_BITRATES) - 1:
+            return None
+        return self.AUDIO_BITRATES[idx + 1]
+
+    def _lower_video_quality(self, current: Optional[str]) -> Optional[str]:
+        if not current:
+            return None
+        current = current.lower()
+        if current not in self.VIDEO_QUALITIES:
+            return None
+        idx = self.VIDEO_QUALITIES.index(current)
+        if idx == len(self.VIDEO_QUALITIES) - 1:
+            return None
+        return self.VIDEO_QUALITIES[idx + 1]
 
 
