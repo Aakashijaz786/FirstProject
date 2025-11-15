@@ -4,7 +4,7 @@ echo Starting FastAPI Backend
 echo ========================================
 echo.
 
-cd /d %~dp0api
+cd /d %~dp0
 
 echo Checking Python installation...
 python --version
@@ -16,9 +16,9 @@ if %ERRORLEVEL% NEQ 0 (
 
 echo.
 echo Checking virtual environment...
-if not exist venv (
+if not exist api\venv (
     echo Creating virtual environment...
-    python -m venv venv
+    python -m venv api\venv
     if %ERRORLEVEL% NEQ 0 (
         echo ERROR: Failed to create virtual environment
         pause
@@ -27,11 +27,11 @@ if not exist venv (
 )
 
 echo Activating virtual environment...
-call venv\Scripts\activate.bat
+call api\venv\Scripts\activate.bat
 
 echo.
 echo Installing/updating dependencies...
-pip install -r requirements.txt --quiet
+pip install -r api\requirements.txt --quiet
 if %ERRORLEVEL% NEQ 0 (
     echo WARNING: Some dependencies may have failed to install
 )
@@ -45,6 +45,6 @@ echo The server will reload automatically on code changes.
 echo Press Ctrl+C to stop the server.
 echo.
 
-python -m uvicorn main:app --reload --host 127.0.0.1 --port 8001
+python -m uvicorn api.main:app --reload --host 127.0.0.1 --port 8001
 
 pause

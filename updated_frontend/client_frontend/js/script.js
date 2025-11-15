@@ -1,5 +1,29 @@
 // API Configuration
-const API_BASE_URL = 'http://localhost:8000'; // Change this to your backend URL in production
+function resolveApiBaseUrl() {
+    const candidates = [];
+    if (typeof window !== 'undefined') {
+        if (window.TIKTOKIO_FASTAPI_BASE) {
+            candidates.push(window.TIKTOKIO_FASTAPI_BASE);
+        }
+        if (window.__FASTAPI_BASE_URL__) {
+            candidates.push(window.__FASTAPI_BASE_URL__);
+        }
+    }
+    if (typeof document !== 'undefined') {
+        const meta = document.querySelector('meta[name="fastapi-base-url"]');
+        if (meta && meta.getAttribute('content')) {
+            candidates.push(meta.getAttribute('content'));
+        }
+    }
+    for (const value of candidates) {
+        if (typeof value === 'string' && value.trim().length > 0) {
+            return value.trim().replace(/\/+$/, '');
+        }
+    }
+    return 'http://127.0.0.1:8000';
+}
+let API_BASE_URL = resolveApiBaseUrl();
+let apiConnectionVerified = false;
 
 // Cache for translations to avoid repeated API calls
 const translationCache = new Map();
@@ -382,21 +406,15 @@ const originalTexts = new Map();
 
 // Test API connection
 async function testAPIConnection() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/`);
-        if (response.ok) {
-            const data = await response.json();
-            console.log('API connected:', data);
-            return true;
-        } else {
-            console.error('API connection failed:', response.status);
-            return false;
-        }
-    } catch (error) {
-        console.error('API connection error:', error);
-        console.error('Make sure the backend server is running on', API_BASE_URL);
-        return false;
+    const connected = await ensureApiBaseUrlConnection();
+    if (connected) {
+        console.log('API connected using', API_BASE_URL);
+        return true;
     }
+    const candidates = buildApiBaseCandidates(API_BASE_URL);
+    console.error('API connection error: none of the candidate base URLs responded.', candidates);
+    console.error('Make sure the backend server is running (e.g., python -m uvicorn api.main:app --host 127.0.0.1 --port 8001)');
+    return false;
 }
 
 // Initialize: Store original English texts on page load
@@ -953,3 +971,4 @@ function initFAQAccordion() {
 }
 
 // Format labels are loaded via loadContentFromAPI which applies to data-i18n attributes
+

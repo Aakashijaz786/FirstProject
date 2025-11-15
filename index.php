@@ -4,10 +4,14 @@ require_once 'includes/config.php';
 require_once 'includes/ads_helper.php';
 $site_url = '';
 $site_enabled = true;
-$res = $conn->query("SELECT site_url, site_status FROM site_settings LIMIT 1");
+$fastapi_base_url = 'http://127.0.0.1:8000';
+$res = $conn->query("SELECT site_url, site_status, fastapi_base_url FROM site_settings LIMIT 1");
 if ($res && $res->num_rows > 0) {
     $row = $res->fetch_assoc();
     $site_url = rtrim($row['site_url'], '/');
+    if (!empty($row['fastapi_base_url'])) {
+        $fastapi_base_url = rtrim($row['fastapi_base_url'], '/');
+    }
     if (isset($row['site_status'])) {
         $site_enabled = ((int)$row['site_status'] === 1);
     }
@@ -612,6 +616,10 @@ if (substr($_SERVER['REQUEST_URI'], -1) === '/') {
 <meta property="og:title" content="<?php echo htmlspecialchars($meta_title); ?>" />
 <meta property="og:description" content="<?php echo htmlspecialchars($meta_description); ?>" />
 <meta property="og:type" content="article" />
+<meta name="fastapi-base-url" content="<?php echo htmlspecialchars($fastapi_base_url); ?>" />
+<script>
+    window.__FASTAPI_BASE_URL__ = <?php echo json_encode(rtrim($fastapi_base_url, '/'), JSON_UNESCAPED_SLASHES); ?>;
+</script>
 <?php
 $og_url = $site_url; // Initialize with base URL
 // Use the actual slug from the URL path for OG URL
