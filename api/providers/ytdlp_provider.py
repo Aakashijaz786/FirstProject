@@ -6,7 +6,7 @@ import os
 import shutil
 import uuid
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 from fastapi import HTTPException, status
@@ -26,6 +26,7 @@ class YTDLPProvider(ProviderBase):
     def __init__(self, context):
         super().__init__(context)
         self.rotator = ProxyRotator(self.key)
+        self.ffmpeg_location = self._resolve_ffmpeg_location()
 
     async def search(self, payload: SearchRequest) -> Dict[str, Any]:
         return await asyncio.to_thread(self._search_sync, payload)
@@ -141,6 +142,8 @@ class YTDLPProvider(ProviderBase):
             'retries': 2,
             'user_agent': self.settings.http_user_agent,
         }
+        if self.ffmpeg_location:
+            opts['ffmpeg_location'] = self.ffmpeg_location
         # Add YouTube API key if available
         youtube_api_key = os.getenv('YOUTUBE_API_KEY', 'AIzaSyBngprvHkjzJpiNHy5jdHIcpQ-bWDETxJE')
         if youtube_api_key and youtube_api_key != 'change-me':
@@ -202,6 +205,86 @@ class YTDLPProvider(ProviderBase):
             processors.append({'key': 'FFmpegMetadata'})
         
         return processors
+
+    def _resolve_ffmpeg_location(self) -> Optional[str]:
+        """
+        Auto-detect FFmpeg/FFprobe so yt-dlp conversions do not fail on fresh systems.
+        """
+        config = self.context.state.get('config') or {}
+        candidate_paths: List[Optional[str]] = [
+            config.get('ffmpeg_location'),
+            config.get('ffmpeg_path'),
+            os.getenv('FASTAPI_FFMPEG_PATH'),
+            os.getenv('FASTAPI_FFMPEG_DIR'),
+            os.getenv('FFMPEG_PATH'),
+            os.getenv('FFMPEG_BINARY'),
+            os.getenv('FFMPEG_LOCATION'),
+        ]
+
+        ffmpeg_from_path = shutil.which('ffmpeg')
+        if ffmpeg_from_path:
+            candidate_paths.append(str(Path(ffmpeg_from_path).parent))
+
+        repo_root = Path(__file__).resolve().parents[2]
+        bundled_candidates = [
+            repo_root / 'api' / 'bin' / 'ffmpeg' / 'bin',
+            repo_root / 'api' / 'bin' / 'ffmpeg',
+            repo_root / 'bin' / 'ffmpeg' / 'bin',
+            repo_root / 'bin' / 'ffmpeg',
+        ]
+        candidate_paths.extend(str(path) for path in bundled_candidates)
+
+        windows_defaults = [
+            Path('C:/ffmpeg/bin'),
+            Path('C:/Program Files/ffmpeg/bin'),
+            Path('C:/Program Files (x86)/ffmpeg/bin'),
+            Path('D:/ffmpeg/bin'),
+        ]
+        unix_defaults = [
+            Path('/usr/bin'),
+            Path('/usr/local/bin'),
+            Path('/opt/homebrew/bin'),
+        ]
+        candidate_paths.extend(str(path) for path in windows_defaults + unix_defaults)
+
+        seen: set[str] = set()
+        for raw_path in candidate_paths:
+            normalized = self._validate_ffmpeg_location(raw_path)
+            if normalized and normalized not in seen:
+                seen.add(normalized)
+                logger.info("Using FFmpeg binaries from %s", normalized)
+                return normalized
+
+        logger.warning("FFmpeg executable not detected automatically. yt-dlp conversions may fail until FFmpeg is installed.")
+        return None
+
+    @staticmethod
+    def _validate_ffmpeg_location(raw_path: Optional[str]) -> Optional[str]:
+        if not raw_path:
+            return None
+        candidate = Path(str(raw_path).strip()).expanduser()
+        if not candidate.exists():
+            return None
+        directory = candidate.parent if candidate.is_file() else candidate
+        if not directory.exists():
+            return None
+        ffmpeg_binary = YTDLPProvider._find_binary(directory, 'ffmpeg')
+        ffprobe_binary = YTDLPProvider._find_binary(directory, 'ffprobe')
+        if ffmpeg_binary and ffprobe_binary:
+            return str(directory)
+        return None
+
+    @staticmethod
+    def _find_binary(directory: Path, name: str) -> Optional[Path]:
+        candidates = [
+            directory / name,
+            directory / f"{name}.exe",
+            directory / f"{name}.bat",
+        ]
+        for path in candidates:
+            if path.exists():
+                return path
+        return None
 
     @staticmethod
     def _looks_like_url(value: str) -> bool:

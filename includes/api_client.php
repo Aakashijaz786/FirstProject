@@ -32,10 +32,82 @@ if (!function_exists('refresh_site_settings_cache')) {
     }
 }
 
+if (!function_exists('fetch_provider_record')) {
+    function fetch_provider_record($conn, $provider_key) {
+        if (!$provider_key) {
+            return null;
+        }
+        $stmt = $conn->prepare("SELECT provider_key, is_enabled FROM api_providers WHERE provider_key=? LIMIT 1");
+        if (!$stmt) {
+            return null;
+        }
+        $stmt->bind_param('s', $provider_key);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result ? $result->fetch_assoc() : null;
+        $stmt->close();
+        return $row;
+    }
+}
+
+if (!function_exists('get_first_enabled_provider_key')) {
+    function get_first_enabled_provider_key($conn, array $exclude = []) {
+        $enabled = [];
+        $res = $conn->query("SELECT provider_key FROM api_providers WHERE is_enabled=1");
+        if ($res) {
+            while ($row = $res->fetch_assoc()) {
+                $enabled[] = $row['provider_key'];
+            }
+            $res->free();
+        }
+        $priority = ['ytdlp', 'cobalt', 'iframe'];
+        usort($enabled, function ($a, $b) use ($priority) {
+            $posA = array_search($a, $priority, true);
+            $posB = array_search($b, $priority, true);
+            $posA = $posA === false ? PHP_INT_MAX : $posA;
+            $posB = $posB === false ? PHP_INT_MAX : $posB;
+            if ($posA === $posB) {
+                return strcmp($a, $b);
+            }
+            return $posA <=> $posB;
+        });
+        foreach ($enabled as $provider_key) {
+            if (in_array($provider_key, $exclude, true)) {
+                continue;
+            }
+            return $provider_key;
+        }
+        return null;
+    }
+}
+
 if (!function_exists('get_active_api_provider')) {
-    function get_active_api_provider($conn) {
+    function get_active_api_provider($conn, $forceRefresh = false) {
+        if ($forceRefresh) {
+            refresh_site_settings_cache();
+        }
         $settings = get_site_settings_cached($conn);
-        return $settings['active_api_provider'] ?? 'ytdlp';
+        $preferred = $settings['active_api_provider'] ?? 'ytdlp';
+        $record = fetch_provider_record($conn, $preferred);
+        if ($record && !empty($record['is_enabled'])) {
+            return $preferred;
+        }
+
+        $fallback = get_first_enabled_provider_key($conn, [$preferred]);
+        if ($fallback) {
+            if ($fallback !== $preferred) {
+                $stmt = $conn->prepare("UPDATE site_settings SET active_api_provider=? LIMIT 1");
+                if ($stmt) {
+                    $stmt->bind_param('s', $fallback);
+                    $stmt->execute();
+                    $stmt->close();
+                    refresh_site_settings_cache();
+                }
+            }
+            return $fallback;
+        }
+
+        return $preferred;
     }
 }
 

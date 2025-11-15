@@ -94,11 +94,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->execute();
                 $stmt->close();
 
-                // Ensure default provider stays enabled
+                // Ensure default provider always points at an enabled provider
                 $settings = get_site_settings_cached($conn);
-                if ($settings['active_api_provider'] === $provider_key && !$is_enabled) {
-                    $conn->query("UPDATE site_settings SET active_api_provider='ytdlp' LIMIT 1");
-                    refresh_site_settings_cache();
+                if (($settings['active_api_provider'] ?? '') === $provider_key && !$is_enabled) {
+                    $fallback = get_first_enabled_provider_key($conn, [$provider_key]);
+                    if ($fallback) {
+                        $stmt = $conn->prepare("UPDATE site_settings SET active_api_provider=? LIMIT 1");
+                        if ($stmt) {
+                            $stmt->bind_param('s', $fallback);
+                            $stmt->execute();
+                            $stmt->close();
+                            refresh_site_settings_cache();
+                            $status_note .= ' Default provider switched to ' . strtoupper($fallback) . '.';
+                        }
+                    } else {
+                        $status_note .= ' Warning: no providers are currently enabled.';
+                    }
                 }
 
                 $message = strtoupper($provider_key) . ' settings updated.' . $status_note;

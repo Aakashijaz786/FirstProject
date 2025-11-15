@@ -55,3 +55,9 @@ __pycache__/
 api/__pycache__/
 api/**/__pycache__/
 
+# Large binary files (ffmpeg binaries)
+api/bin/ffmpeg/bin/*.exe
+api/bin/ffmpeg/bin/ffmpeg
+api/bin/ffmpeg/bin/ffplay
+api/bin/ffmpeg/bin/ffprobe
+
