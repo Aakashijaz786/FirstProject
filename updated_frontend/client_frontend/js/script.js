@@ -162,6 +162,122 @@ const translationCache = new Map();
 
 // Store original English texts
 const originalTexts = new Map();
+let availableLanguages = [];
+
+function normalizeLanguageImage(path) {
+    if (!path) {
+        return '';
+    }
+    if (/^https?:\/\//i.test(path)) {
+        return path;
+    }
+    const cleaned = path.replace(/^\/+/, '');
+    return '/' + cleaned;
+}
+
+function readLanguagesFromDom() {
+    const menu = document.getElementById('languageMenu');
+    if (!menu) {
+        return [];
+    }
+    return Array.from(menu.querySelectorAll('.language-item')).map((item) => {
+        return {
+            id: parseInt(item.dataset.id || '0', 10) || 0,
+            code: (item.getAttribute('data-lang') || 'en').toLowerCase(),
+            name: item.textContent.trim(),
+            image: item.dataset.image || '',
+            is_default: item.dataset.default === '1',
+        };
+    });
+}
+
+async function fetchLanguagesFromAPI() {
+    try {
+        const response = await fetch(`${window.location.origin}/yt_frontend_api.php?action=languages`, {
+            credentials: 'same-origin',
+        });
+        if (!response.ok) {
+            throw new Error('Invalid response');
+        }
+        const payload = await response.json();
+        if (Array.isArray(payload.languages) && payload.languages.length) {
+            return payload.languages.map((lang) => ({
+                ...lang,
+                code: (lang.code || 'en').toLowerCase(),
+                image: lang.image || '',
+            }));
+        }
+    } catch (error) {
+        console.warn('Failed to fetch languages list, falling back to DOM list', error);
+    }
+    return readLanguagesFromDom();
+}
+
+function renderLanguageMenu(languages) {
+    const menu = document.getElementById('languageMenu');
+    if (!menu) {
+        return [];
+    }
+    if (!Array.isArray(languages) || !languages.length) {
+        return menu.querySelectorAll('.language-item');
+    }
+    menu.innerHTML = '';
+    languages.forEach((language) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'language-item';
+        button.setAttribute('data-lang', (language.code || 'en').toLowerCase());
+        button.dataset.image = language.image || '';
+        button.dataset.id = language.id || '';
+        button.dataset.default = language.is_default ? '1' : '0';
+
+        const label = document.createElement('span');
+        if (language.name) {
+            label.textContent = language.name;
+        } else if (language.code) {
+            label.textContent = language.code.toUpperCase();
+        } else {
+            label.textContent = 'Language';
+        }
+        button.appendChild(label);
+        menu.appendChild(button);
+    });
+    return menu.querySelectorAll('.language-item');
+}
+
+function highlightActiveLanguage(code) {
+    const normalized = (code || '').toLowerCase();
+    document.querySelectorAll('.language-item').forEach((item) => {
+        const itemCode = (item.getAttribute('data-lang') || '').toLowerCase();
+        if (itemCode === normalized) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+function findLanguageMeta(code) {
+    const normalized = (code || '').toLowerCase();
+    return availableLanguages.find((lang) => (lang.code || '').toLowerCase() === normalized);
+}
+
+function setLanguageToggleDetails(code) {
+    const toggle = document.getElementById('languageToggle');
+    if (!toggle) {
+        return;
+    }
+    const language = findLanguageMeta(code) || null;
+    if (language && language.name) {
+        toggle.textContent = language.name;
+        return;
+    }
+    if (language && language.code) {
+        toggle.textContent = language.code.toUpperCase();
+        return;
+    }
+    toggle.textContent = (code || 'en').toUpperCase();
+}
 
 // YouTube Download Functionality
 (function() {
@@ -779,21 +895,8 @@ async function translatePage(lang) {
             }
         });
         
-        // Update language toggle button text
-        if (languageToggle) {
-            const selectedItem = document.querySelector(`.language-item[data-lang="${lang}"]`);
-            if (selectedItem) {
-                languageToggle.textContent = selectedItem.textContent;
-            }
-        }
-        
-        // Update active language indicator in dropdown
-        document.querySelectorAll('.language-item').forEach(item => {
-            item.classList.remove('active');
-            if (item.getAttribute('data-lang') === lang) {
-                item.classList.add('active');
-            }
-        });
+        highlightActiveLanguage(lang);
+        setLanguageToggleDetails(lang);
         
         // Remove progress message
         const progressMsg = document.getElementById('translation-progress');
@@ -848,7 +951,14 @@ async function translatePage(lang) {
         
         const languageToggle = document.getElementById('languageToggle');
         const languageMenu = document.getElementById('languageMenu');
-        const languageItems = document.querySelectorAll('.language-item');
+        availableLanguages = await fetchLanguagesFromAPI();
+        if (!availableLanguages.length) {
+            availableLanguages = readLanguagesFromDom();
+        }
+        let languageItems = renderLanguageMenu(availableLanguages);
+        if (!languageItems || !languageItems.length) {
+            languageItems = document.querySelectorAll('.language-item');
+        }
         
         console.log('Language system initialized. Toggle:', !!languageToggle, 'Menu:', !!languageMenu, 'Items:', languageItems.length);
         
@@ -856,6 +966,8 @@ async function translatePage(lang) {
         const savedLang = localStorage.getItem('selectedLanguage') || 'en';
         const page = window.location.pathname.includes('mp3') ? 'mp3' : 
                     window.location.pathname.includes('mp4') ? 'mp4' : 'home';
+        highlightActiveLanguage(savedLang);
+        setLanguageToggleDetails(savedLang);
         
         // Always load content from API (even for English, so admin changes show up)
         loadContentFromAPI(savedLang, page).then(() => {
@@ -897,7 +1009,6 @@ async function translatePage(lang) {
                     e.stopPropagation();
                     
                     const selectedLang = this.getAttribute('data-lang');
-                    const selectedText = this.textContent.trim();
                     
                     if (!selectedLang) {
                         console.error('Language code not found');
@@ -918,7 +1029,8 @@ async function translatePage(lang) {
                         
                         // Store selected language in localStorage for persistence
                         localStorage.setItem('selectedLanguage', selectedLang);
-                        localStorage.setItem('selectedLanguageText', selectedText);
+                        setLanguageToggleDetails(selectedLang);
+                        highlightActiveLanguage(selectedLang);
                     } else {
                         console.error('Failed to load content from API');
                     }
@@ -941,6 +1053,20 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
         
         const data = await response.json();
         const strings = data.strings || {};
+
+        if (data.language) {
+            const normalized = (data.language.code || '').toLowerCase();
+            availableLanguages = availableLanguages.map((lang) => {
+                if ((lang.code || '').toLowerCase() === normalized) {
+                    return {
+                        ...lang,
+                        name: data.language.name || lang.name,
+                        image: data.language.image || lang.image,
+                    };
+                }
+                return lang;
+            });
+        }
         
         // Apply content to all elements with data-i18n attributes
         document.querySelectorAll('[data-i18n]').forEach(element => {
@@ -962,8 +1088,33 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
                     }
                     // If empty, keep the original src (default image from HTML)
                 } else {
-                    // Check if value contains HTML
-                    if (value.includes('<') || value.includes('&lt;')) {
+                    // For headings (H1-H6) and elements that might contain HTML, always check for HTML
+                    // Also check for HTML entities and tags
+                    const hasHtml = value.includes('<') || 
+                                   value.includes('&lt;') || 
+                                   value.includes('&gt;') || 
+                                   value.includes('&amp;') ||
+                                   value.includes('&nbsp;') ||
+                                   value.includes('<p>') ||
+                                   value.includes('<br') ||
+                                   value.includes('<strong>') ||
+                                   value.includes('<em>') ||
+                                   value.includes('<span>') ||
+                                   value.includes('<div>');
+                    
+                    // For heading elements (H1-H6) or elements with class containing 'title', always allow HTML
+                    const isHeading = /^H[1-6]$/i.test(element.tagName);
+                    const isTitle = element.classList.contains('title') || 
+                                   element.classList.contains('faq-title') ||
+                                   element.classList.contains('section-title');
+                    
+                    // Special handling for faqTitle, stepsTitle, heroSubtitle - always use innerHTML to support HTML formatting
+                    const isFaqTitle = key === 'faqTitle';
+                    const isStepsTitle = key === 'stepsTitle';
+                    const isHeroSubtitle = key === 'heroSubtitle';
+                    const isStep = key === 'step1' || key === 'step2' || key === 'step3';
+                    
+                    if (hasHtml || isHeading || isTitle || isFaqTitle || isStepsTitle || isHeroSubtitle || isStep) {
                         element.innerHTML = value;
                     } else {
                         element.textContent = value;
@@ -975,13 +1126,35 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
         // Also handle images by data attribute
         document.querySelectorAll('img[data-image-key]').forEach(img => {
             const key = img.getAttribute('data-image-key');
+            const wrapper = img.closest('.promo-item');
             if (key && strings[key]) {
                 const value = strings[key];
                 if (value && value.trim() !== '') {
-                    img.src = value.startsWith('http') ? value : value;
+                    const normalized = value.startsWith('http') ? value : value;
+                    img.src = normalized;
+                    img.style.display = 'block';
+                    img.classList.add('has-image');
+                    if (wrapper) {
+                        wrapper.classList.remove('promo-item-empty');
+                    }
+                } else {
+                    img.style.display = 'none';
+                    img.classList.remove('has-image');
+                    if (wrapper) {
+                        wrapper.classList.add('promo-item-empty');
+                    }
+                }
+            } else {
+                img.style.display = 'none';
+                img.classList.remove('has-image');
+                if (wrapper) {
+                    wrapper.classList.add('promo-item-empty');
                 }
             }
         });
+
+        highlightActiveLanguage(langCode);
+        setLanguageToggleDetails(langCode);
         
         return data;
     } catch (error) {
@@ -1006,13 +1179,21 @@ async function loadFAQs(langCode = 'en') {
         const data = await response.json();
         const faqs = data.faqs || [];
         
-        if (faqs.length === 0) {
+        if (!faqs || faqs.length === 0) {
+            faqContent.innerHTML = '<p class="text-muted">No FAQs available.</p>';
+            return;
+        }
+        
+        // Filter out FAQs with empty questions
+        const validFaqs = faqs.filter(faq => faq.question && faq.question.trim() !== '');
+        
+        if (validFaqs.length === 0) {
             faqContent.innerHTML = '<p class="text-muted">No FAQs available.</p>';
             return;
         }
         
         // Render FAQs
-        faqContent.innerHTML = faqs.map(faq => {
+        faqContent.innerHTML = validFaqs.map(faq => {
             // Process answer to handle HTML and line breaks
             let answerText = faq.answer;
             

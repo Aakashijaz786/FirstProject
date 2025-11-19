@@ -27,11 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_language'])) {
         }
     }
     $add_download_label = $_POST['add_download_label'] ?? '';
-    $add_paste_label = $_POST['add_paste_label'] ?? '';
-    $add_download_app_title = $_POST['add_download_app_title'] ?? '';
-    $add_download_app_description = $_POST['add_download_app_description'] ?? '';
     $add_how_to_save = $_POST['add_how_to_save'] ?? '';
-    $add_download_mp3 = $_POST['add_download_mp3'] ?? '';
     $add_tiktok_downloaders = $_POST['add_tiktok_downloaders'] ?? '';
     $add_stories = $_POST['add_stories'] ?? '';
     $add_terms_conditions = $_POST['add_terms_conditions'] ?? '';
@@ -42,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_language'])) {
         $name_esc = $conn->real_escape_string($name);
         $code_esc = $conn->real_escape_string($code);
         $img_esc = $image_path ? "'" . $conn->real_escape_string($image_path) . "'" : 'NULL';
-        $sql = "INSERT INTO languages (image, name, code, download_label, paste_label, download_app_title, download_app_description, how_to_save, download_mp3, tiktok_downloaders, stories, terms_conditions, privacy_policy, contact) VALUES ($img_esc, '$name_esc', '$code_esc', '" . $conn->real_escape_string($add_download_label) . "', '" . $conn->real_escape_string($add_paste_label) . "', '" . $conn->real_escape_string($add_download_app_title) . "', '" . $conn->real_escape_string($add_download_app_description) . "', '" . $conn->real_escape_string($add_how_to_save) . "', '" . $conn->real_escape_string($add_download_mp3) . "', '" . $conn->real_escape_string($add_tiktok_downloaders) . "', '" . $conn->real_escape_string($add_stories) . "', '" . $conn->real_escape_string($add_terms_conditions) . "', '" . $conn->real_escape_string($add_privacy_policy) . "', '" . $conn->real_escape_string($add_contact) . "')";
+        $sql = "INSERT INTO languages (image, name, code, download_label, how_to_save, tiktok_downloaders, stories, terms_conditions, privacy_policy, contact) VALUES ($img_esc, '$name_esc', '$code_esc', '" . $conn->real_escape_string($add_download_label) . "', '" . $conn->real_escape_string($add_how_to_save) . "', '" . $conn->real_escape_string($add_tiktok_downloaders) . "', '" . $conn->real_escape_string($add_stories) . "', '" . $conn->real_escape_string($add_terms_conditions) . "', '" . $conn->real_escape_string($add_privacy_policy) . "', '" . $conn->real_escape_string($add_contact) . "')";
         if ($conn->query($sql)) {
             $success = 'Language added successfully!';
         } else {
@@ -72,11 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_language'])) {
         }
     }
     $edit_download_label = $_POST['edit_download_label'] ?? '';
-    $edit_paste_label = $_POST['edit_paste_label'] ?? '';
-    $edit_download_app_title = $_POST['edit_download_app_title'] ?? '';
-    $edit_download_app_description = $_POST['edit_download_app_description'] ?? '';
     $edit_how_to_save = $_POST['edit_how_to_save'] ?? '';
-    $edit_download_mp3 = $_POST['edit_download_mp3'] ?? '';
     $edit_tiktok_downloaders = $_POST['edit_tiktok_downloaders'] ?? '';
     $edit_stories = $_POST['edit_stories'] ?? '';
     $edit_terms_conditions = $_POST['edit_terms_conditions'] ?? '';
@@ -89,11 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_language'])) {
         $img_esc = $image_path ? "'" . $conn->real_escape_string($image_path) . "'" : 'NULL';
         $sql = "UPDATE languages SET image=$img_esc, name='$name_esc', code='$code_esc',
   download_label='" . $conn->real_escape_string($edit_download_label) . "',
-  paste_label='" . $conn->real_escape_string($edit_paste_label) . "',
-  download_app_title='" . $conn->real_escape_string($edit_download_app_title) . "',
-  download_app_description='" . $conn->real_escape_string($edit_download_app_description) . "',
   how_to_save='" . $conn->real_escape_string($edit_how_to_save) . "',
-  download_mp3='" . $conn->real_escape_string($edit_download_mp3) . "',
   tiktok_downloaders='" . $conn->real_escape_string($edit_tiktok_downloaders) . "',
   stories='" . $conn->real_escape_string($edit_stories) . "',
   terms_conditions='" . $conn->real_escape_string($edit_terms_conditions) . "',
@@ -239,11 +227,7 @@ include 'includes/header.php';
                                data-code="<?php echo htmlspecialchars($lang['code']); ?>"
                                data-image="<?php echo htmlspecialchars($lang['image']); ?>"
                                data-download_label="<?php echo htmlspecialchars($lang['download_label'] ?? ''); ?>"
-                               data-paste_label="<?php echo htmlspecialchars($lang['paste_label'] ?? ''); ?>"
-                               data-download_app_title="<?php echo htmlspecialchars($lang['download_app_title'] ?? ''); ?>"
-                               data-download_app_description="<?php echo htmlspecialchars($lang['download_app_description'] ?? ''); ?>"
                                data-how_to_save="<?php echo htmlspecialchars($lang['how_to_save'] ?? ''); ?>"
-                               data-download_mp3="<?php echo htmlspecialchars($lang['download_mp3'] ?? ''); ?>"
                                data-tiktok_downloaders="<?php echo htmlspecialchars($lang['tiktok_downloaders'] ?? ''); ?>"
                                data-stories="<?php echo htmlspecialchars($lang['stories'] ?? ''); ?>"
                                data-terms_conditions="<?php echo htmlspecialchars($lang['terms_conditions'] ?? ''); ?>"
@@ -292,34 +276,18 @@ include 'includes/header.php';
                     <label class="form-label">Download Label</label>
                     <input type="text" class="form-control" name="add_download_label" id="add_download_label">
                   </div>
-                  <div class="mb-3">
-                    <label class="form-label">Paste Label</label>
-                    <input type="text" class="form-control" name="add_paste_label" id="add_paste_label">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Download the App Title</label>
-                    <input type="text" class="form-control" name="add_download_app_title" id="add_download_app_title">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Download the App Description</label>
-                    <input type="text" class="form-control" name="add_download_app_description" id="add_download_app_description">
-                  </div>
                 </div>
                 <div class="col-md-6">
                   <div class="mb-3">
-                    <label class="form-label">How to Save TikTok Video?</label>
-                    <input type="text" class="form-control" name="add_how_to_save" id="add_how_to_save">
+                    <label class="form-label">YouTube to MP3</label>
+                    <input type="text" class="form-control" name="add_how_to_save" id="add_how_to_save" value="YouTube Viewer">
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Download TikTok MP3</label>
-                    <input type="text" class="form-control" name="add_download_mp3" id="add_download_mp3">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">TikTok Downloaders</label>
+                    <label class="form-label">YouTube Downloader</label>
                     <input type="text" class="form-control" name="add_tiktok_downloaders" id="add_tiktok_downloaders">
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Stories</label>
+                    <label class="form-label">YouTube to MP4</label>
                     <input type="text" class="form-control" name="add_stories" id="add_stories">
                   </div>
                   <div class="mb-3">
@@ -377,34 +345,18 @@ include 'includes/header.php';
                     <label class="form-label">Download Label</label>
                     <input type="text" class="form-control" name="edit_download_label" id="edit_download_label">
                   </div>
-                  <div class="mb-3">
-                    <label class="form-label">Paste Label</label>
-                    <input type="text" class="form-control" name="edit_paste_label" id="edit_paste_label">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Download the App Title</label>
-                    <input type="text" class="form-control" name="edit_download_app_title" id="edit_download_app_title">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Download the App Description</label>
-                    <input type="text" class="form-control" name="edit_download_app_description" id="edit_download_app_description">
-                  </div>
                 </div>
                 <div class="col-md-6">
                   <div class="mb-3">
-                    <label class="form-label">How to Save TikTok Video?</label>
+                    <label class="form-label">YouTube to MP3</label>
                     <input type="text" class="form-control" name="edit_how_to_save" id="edit_how_to_save">
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Download TikTok MP3</label>
-                    <input type="text" class="form-control" name="edit_download_mp3" id="edit_download_mp3">
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">TikTok Downloaders</label>
+                    <label class="form-label">YouTube Downloader</label>
                     <input type="text" class="form-control" name="edit_tiktok_downloaders" id="edit_tiktok_downloaders">
                   </div>
                   <div class="mb-3">
-                    <label class="form-label">Stories</label>
+                    <label class="form-label">YouTube to MP4</label>
                     <input type="text" class="form-control" name="edit_stories" id="edit_stories">
                   </div>
                   <div class="mb-3">
@@ -450,11 +402,8 @@ include 'includes/header.php';
                 document.getElementById('edit_code').value = this.getAttribute('data-code') || '';
                 document.getElementById('current_image').value = this.getAttribute('data-image') || '';
                 document.getElementById('edit_download_label').value = this.getAttribute('data-download_label') || '';
-                document.getElementById('edit_paste_label').value = this.getAttribute('data-paste_label') || '';
-                document.getElementById('edit_download_app_title').value = this.getAttribute('data-download_app_title') || '';
-                document.getElementById('edit_download_app_description').value = this.getAttribute('data-download_app_description') || '';
-                document.getElementById('edit_how_to_save').value = this.getAttribute('data-how_to_save') || '';
-                document.getElementById('edit_download_mp3').value = this.getAttribute('data-download_mp3') || '';
+                const rawHowToSave = this.getAttribute('data-how_to_save') || '';
+                document.getElementById('edit_how_to_save').value = rawHowToSave === 'TikTok Viewer' || rawHowToSave === '' ? 'YouTube Viewer' : rawHowToSave;
                 document.getElementById('edit_tiktok_downloaders').value = this.getAttribute('data-tiktok_downloaders') || '';
                 document.getElementById('edit_stories').value = this.getAttribute('data-stories') || '';
                 document.getElementById('edit_terms_conditions').value = this.getAttribute('data-terms_conditions') || '';
@@ -479,11 +428,7 @@ include 'includes/header.php';
             $('#edit_code').val('');
             $('#current_image').val('');
             $('#edit_download_label').val('');
-            $('#edit_paste_label').val('');
-            $('#edit_download_app_title').val('');
-            $('#edit_download_app_description').val('');
-            $('#edit_how_to_save').val('');
-            $('#edit_download_mp3').val('');
+            $('#edit_how_to_save').val('YouTube Viewer');
             $('#edit_tiktok_downloaders').val('');
             $('#edit_stories').val('');
             $('#edit_terms_conditions').val('');

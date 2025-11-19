@@ -86,7 +86,7 @@ $header_pages = [
 
     [
 
-        'label' => $current_lang['stories'] ?? 'Stories', 
+        'label' => $current_lang['stories'] ?? 'YouTube to MP4', 
 
         'key' => 'stories', 
 
@@ -108,7 +108,7 @@ $header_pages = [
 
     [
 
-        'label' => $current_lang['download_mp3'] ?? 'Download TikTok MP3', 
+        'label' => $current_lang['how_to_save'] ?? 'YouTube to MP3', 
 
         'key' => 'mp3', 
 

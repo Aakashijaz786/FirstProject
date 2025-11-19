@@ -11,14 +11,19 @@ $action = $_GET['action'] ?? 'content';
 try {
     if ($action === 'languages') {
         $languages = [];
-        $res = $conn->query("SELECT id, name, code, is_default FROM languages ORDER BY name ASC");
+        $res = $conn->query("SELECT id, name, code, is_default, image FROM languages ORDER BY name ASC");
         if ($res && $res->num_rows > 0) {
             while ($row = $res->fetch_assoc()) {
+                $image = '';
+                if (!empty($row['image'])) {
+                    $image = '/' . ltrim($row['image'], '/');
+                }
                 $languages[] = [
                     'id' => (int)$row['id'],
                     'name' => $row['name'],
                     'code' => $row['code'],
                     'is_default' => (int)$row['is_default'] === 1,
+                    'image' => $image,
                 ];
             }
         }
@@ -53,19 +58,35 @@ try {
 
         $strings = yt_frontend_resolve_strings($conn, (int)$language['id'], $page);
 
-        // Fetch FAQs for home page
+        // Override key navigation/footer strings with language table values
+        $language_overrides = [
+            'navDownloader' => $language['tiktok_downloaders'] ?? '',
+            'navMP3' => $language['how_to_save'] ?? '',
+            'navMP4' => $language['stories'] ?? '',
+            'contact' => $language['contact'] ?? '',
+            'privacy' => $language['privacy_policy'] ?? '',
+            'terms' => $language['terms_conditions'] ?? '',
+            'convertBtn' => $language['download_label'] ?? '',
+            'convertNow' => $language['download_label'] ?? '',
+        ];
+        foreach ($language_overrides as $key => $value) {
+            $value = trim((string)$value);
+            if ($value !== '') {
+                $strings[$key] = $value;
+            }
+        }
+
+        // Fetch FAQs for all pages (home, mp3, mp4)
         $faqs = [];
-        if ($page === 'home') {
-            $langId = (int)$language['id'];
-            $res = $conn->query("SELECT id, question, answer FROM language_faqs WHERE language_id={$langId} ORDER BY id ASC");
-            if ($res && $res->num_rows > 0) {
-                while ($row = $res->fetch_assoc()) {
-                    $faqs[] = [
-                        'id' => (int)$row['id'],
-                        'question' => $row['question'],
-                        'answer' => $row['answer'],
-                    ];
-                }
+        $langId = (int)$language['id'];
+        $res = $conn->query("SELECT id, question, answer FROM language_faqs WHERE language_id={$langId} ORDER BY id ASC");
+        if ($res && $res->num_rows > 0) {
+            while ($row = $res->fetch_assoc()) {
+                $faqs[] = [
+                    'id' => (int)$row['id'],
+                    'question' => $row['question'],
+                    'answer' => $row['answer'] ?? '', // Ensure answer is always a string
+                ];
             }
         }
 
@@ -76,11 +97,13 @@ try {
                 'id' => (int)$language['id'],
                 'code' => $language['code'],
                 'name' => $language['name'],
+                'image' => !empty($language['image']) ? '/' . ltrim($language['image'], '/') : '',
             ],
             'strings' => $strings,
         ];
 
-        if ($page === 'home' && !empty($faqs)) {
+        // Always include FAQs in response if they exist
+        if (!empty($faqs)) {
             $response['faqs'] = $faqs;
         }
 

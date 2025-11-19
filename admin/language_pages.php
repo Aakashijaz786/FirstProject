@@ -6,19 +6,6 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
 }
 require_once '../includes/config.php';
 
-// Get MP3 page visibility setting
-$check_mp3 = $conn->query("SHOW COLUMNS FROM site_settings LIKE 'mp3_page_enabled'");
-if (!$check_mp3 || $check_mp3->num_rows == 0) {
-    $conn->query("ALTER TABLE site_settings ADD COLUMN mp3_page_enabled TINYINT(1) DEFAULT 1");
-}
-
-$mp3_enabled = 1; // Default
-$settings_res = $conn->query("SELECT mp3_page_enabled FROM site_settings LIMIT 1");
-if ($settings_res && $settings_res->num_rows > 0) {
-    $settings = $settings_res->fetch_assoc();
-    $mp3_enabled = isset($settings['mp3_page_enabled']) ? (int)$settings['mp3_page_enabled'] : 1;
-}
-
 // Handle delete custom page (AJAX)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_custom_page_id'])) {
     $delete_id = intval($_POST['delete_custom_page_id']);
@@ -74,18 +61,6 @@ include 'includes/header.php';
     <div class="main-content" id="mainContent">
         <div class="container-fluid">
             <h4 class="fw-bold mb-4"><?php echo $lang_name; ?> Pages</h4>
-			<div class="card mb-3">
-				<div class="card-header d-flex justify-content-between align-items-center">
-					<span>YT1s Page Editors</span>
-				</div>
-				<div class="card-body">
-					<div class="d-flex gap-2 flex-wrap">
-						<a class="btn btn-sm btn-outline-primary" href="yt_mp3.php?id=<?php echo $lang_id; ?>" id="mp3-edit-btn" style="<?php echo ($mp3_enabled == 1) ? '' : 'display:none;'; ?>">Edit YouTube to MP3</a>
-						<a class="btn btn-sm btn-outline-primary" href="yt_mp4.php?id=<?php echo $lang_id; ?>">Edit YouTube to MP4</a>
-					</div>
-					<p class="text-muted small mb-0 mt-2">These editors update the dynamic texts shown on the YT1s pages without changing the frontend files.</p>
-				</div>
-			</div>
              <?php if (isset($_GET['deleted']) && $_GET['deleted'] == '1'): ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <strong>Success!</strong> The page has been deleted successfully.
