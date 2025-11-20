@@ -65,7 +65,7 @@ $status_type = 'success';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['faq_action'])) {
     $action = $_POST['faq_action'];
     
-    if ($action === 'save_faqs' && $page_key === 'home') {
+    if ($action === 'save_faqs') {
         $faq_ids = $_POST['faq_id'] ?? [];
         $faq_questions = $_POST['faq_question'] ?? [];
         $faq_answers = $_POST['faq_answer'] ?? [];
@@ -359,19 +359,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_POST['faq_action'])) {
     }
 }
 
-// Fetch FAQs for this language (only for home page)
+// Fetch FAQs for this language (for all pages)
 $faqs = [];
-if ($page_key === 'home') {
-    $res = $conn->query("SELECT * FROM language_faqs WHERE language_id={$lang_id} ORDER BY id ASC");
-    if ($res && $res->num_rows > 0) {
-        while ($row = $res->fetch_assoc()) {
-            $faqs[] = $row;
-        }
+$res = $conn->query("SELECT * FROM language_faqs WHERE language_id={$lang_id} ORDER BY id ASC");
+if ($res && $res->num_rows > 0) {
+    while ($row = $res->fetch_assoc()) {
+        $faqs[] = $row;
     }
-    // If no FAQs exist, add one empty FAQ for editing
-    if (empty($faqs)) {
-        $faqs[] = ['id' => 0, 'question' => '', 'answer' => ''];
-    }
+}
+// If no FAQs exist, add one empty FAQ for editing
+if (empty($faqs)) {
+    $faqs[] = ['id' => 0, 'question' => '', 'answer' => ''];
 }
 
 include 'includes/header.php';
@@ -682,13 +680,14 @@ $renderField = function (string $key, array $options = []) use ($fields, $displa
             </div>
         <?php endif; ?>
 
-        <?php if ($page_key === 'home'): ?>
+        <?php if (in_array($page_key, ['home', 'mp3', 'mp4'])): ?>
         <div class="page-section">
-            <h4>Home Page (<?php echo htmlspecialchars($language['name']); ?>)</h4>
+            <h4><?php echo htmlspecialchars($page_label); ?> (<?php echo htmlspecialchars($language['name']); ?>)</h4>
             <?php if ($status_message): ?>
                 <div class="alert alert-<?php echo $status_type; ?>"><?php echo htmlspecialchars($status_message); ?></div>
             <?php endif; ?>
-            <form method="post" enctype="multipart/form-data" id="homeContentForm">
+            <form method="post" enctype="multipart/form-data" id="pageContentForm">
+                <?php if ($page_key === 'home'): ?>
                 <div class="mb-3">
                     <label class="form-label">Language Direction</label>
                     <select class="form-select" name="language_direction" style="max-width: 200px;">
@@ -700,6 +699,7 @@ $renderField = function (string $key, array $options = []) use ($fields, $displa
                     <label class="form-label">Slug</label>
                     <input type="text" class="form-control" name="home_slug" value="<?php echo htmlspecialchars($language_slug); ?>" placeholder="home" style="max-width: 300px;">
                 </div>
+                <?php endif; ?>
                 <div class="mb-3">
                     <label class="form-label">Meta Title</label>
                     <?php echo $renderField('meta_title', ['label' => '']); ?>
@@ -769,12 +769,9 @@ $renderField = function (string $key, array $options = []) use ($fields, $displa
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <h3>Section 3</h3>
+                <?php if (in_array($page_key, ['home', 'mp3', 'mp4'])): ?>
+                <h3>Section 3 - MP3 Promo</h3>
                 <hr>
-                <div class="mb-3">
-                    <label class="form-label">Heading</label>
-                    <?php echo $renderField('mp3PromoTitle', ['label' => '', 'ckeditor' => true, 'editor_height' => 120, 'show_english' => false]); ?>
-                </div>
                 <div class="mb-3">
                     <label class="form-label">Images</label>
                     <div class="row g-3">
@@ -789,9 +786,18 @@ $renderField = function (string $key, array $options = []) use ($fields, $displa
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Description</label>
-                    <?php echo $renderField('mp3PromoDesc', ['label' => '', 'ckeditor' => true, 'editor_height' => 160, 'show_english' => false]); ?>
+                    <label class="form-label fw-semibold">Heading</label>
+                    <div class="p-3 border rounded">
+                        <?php echo $renderField('mp3PromoTitle', ['label' => '', 'ckeditor' => true, 'editor_height' => 140, 'show_english' => false]); ?>
+                    </div>
                 </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Description</label>
+                    <div class="p-3 border rounded">
+                        <?php echo $renderField('mp3PromoDesc', ['label' => '', 'ckeditor' => true, 'editor_height' => 160, 'show_english' => false]); ?>
+                    </div>
+                </div>
+                <?php endif; ?>
                 <h3>Section 4</h3>
                 <hr>
                 <div class="mb-3">
@@ -831,7 +837,7 @@ $renderField = function (string $key, array $options = []) use ($fields, $displa
 
             <form method="post" id="faqForm">
                 <input type="hidden" name="faq_action" value="save_faqs">
-                <h3>FAQs (Home Page)</h3>
+                <h3>FAQs (<?php echo htmlspecialchars($page_label); ?>)</h3>
                 <hr>
                 <div class="mb-3">
                     <label class="form-label">Heading</label>
@@ -895,7 +901,7 @@ $renderField = function (string $key, array $options = []) use ($fields, $displa
     </div>
 </div>
 
-<?php if ($page_key === 'home'): ?>
+<?php if (in_array($page_key, ['home', 'mp3', 'mp4'])): ?>
 <script>
 (function() {
     function initEditors() {

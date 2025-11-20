@@ -1113,8 +1113,31 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
                     const isStepsTitle = key === 'stepsTitle';
                     const isHeroSubtitle = key === 'heroSubtitle';
                     const isStep = key === 'step1' || key === 'step2' || key === 'step3';
+                    const isDescription = key === 'description1' || key === 'description2';
+                    const isFeatureDesc = key === 'feature1Desc' || key === 'feature2Desc' || key === 'feature3Desc' || 
+                                         key === 'feature4Desc' || key === 'feature5Desc' || key === 'feature6Desc';
                     
-                    if (hasHtml || isHeading || isTitle || isFaqTitle || isStepsTitle || isHeroSubtitle || isStep) {
+                    // For description and feature description fields in <p> tags, extract content if value contains <p> tags to avoid nesting
+                    if ((isDescription || isFeatureDesc) && element.tagName === 'P' && value.trim().match(/^<p[^>]*>/i)) {
+                        // Extract inner content from <p> tags, preserving other HTML formatting
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = value;
+                        // Get all child nodes to preserve formatting like <strong>, <em>, etc.
+                        let extractedContent = '';
+                        if (tempDiv.firstElementChild && tempDiv.firstElementChild.tagName === 'P') {
+                            // If wrapped in <p>, get innerHTML of that <p>
+                            extractedContent = tempDiv.firstElementChild.innerHTML;
+                        } else {
+                            // Otherwise, get all innerHTML
+                            extractedContent = tempDiv.innerHTML;
+                        }
+                        // If we got content, use it; otherwise fall back to textContent
+                        if (extractedContent && extractedContent.trim()) {
+                            element.innerHTML = extractedContent;
+                        } else {
+                            element.textContent = tempDiv.textContent || tempDiv.innerText || value;
+                        }
+                    } else if (hasHtml || isHeading || isTitle || isFaqTitle || isStepsTitle || isHeroSubtitle || isStep) {
                         element.innerHTML = value;
                     } else {
                         element.textContent = value;
@@ -1171,7 +1194,9 @@ async function loadFAQs(langCode = 'en') {
     try {
         // Use relative path since we're on the same domain
         const apiUrl = window.location.origin + '/yt_frontend_api.php';
-        const response = await fetch(`${apiUrl}?action=content&page=home&lang=${langCode}`);
+        const page = window.location.pathname.includes('mp3') ? 'mp3' : 
+                    window.location.pathname.includes('mp4') ? 'mp4' : 'home';
+        const response = await fetch(`${apiUrl}?action=content&page=${page}&lang=${langCode}`);
         if (!response.ok) {
             throw new Error('Failed to fetch FAQs');
         }
