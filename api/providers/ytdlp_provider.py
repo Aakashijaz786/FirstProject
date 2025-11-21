@@ -141,6 +141,8 @@ class YTDLPProvider(ProviderBase):
             'geo_bypass': True,
             'retries': 2,
             'user_agent': self.settings.http_user_agent,
+            'restrictfilenames': True,
+            'windowsfilenames': True,
         }
         if self.ffmpeg_location:
             opts['ffmpeg_location'] = self.ffmpeg_location

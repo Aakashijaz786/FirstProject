@@ -92,21 +92,53 @@ if (empty($media_url)) {
 }
 
 $provider = $search_session['provider'];
-$settings = get_site_settings_cached($conn);
-
-try {
-    // Set longer timeout for downloads
-    set_time_limit(180); // 3 minutes
+    $settings = get_site_settings_cached($conn);
     
+    try {
+        // Set longer timeout for downloads
+        set_time_limit(180); // 3 minutes
+        
+        // Sanitize title for override to prevent [Errno 22] Invalid argument
+        $safe_title = null;
+        if (!empty($item['title'])) {
+            // Remove invalid filename characters for Windows
+            $safe_title = preg_replace('/[<>:"\/\\|?*]/', '', $item['title']);
+            $safe_title = trim($safe_title);
+            if (empty($safe_title)) {
+                $safe_title = 'video_download';
+            }
+        }
+
     $api_response = media_api_download(
-        $conn,
-        $media_url,
-        $provider,
-        $format,
-        $quality,
-        null,
-        $settings['site_name'] ?? 'YT1s Downloader'
-    );
+            $conn,
+            $media_url,
+            $provider,
+            $format,
+            $quality,
+            $safe_title,
+            $settings['site_name'] ?? 'YT1s Downloader'
+        );
+
+    // If the primary provider fails due to invalid filenames, fall back to cobalt
+    if (
+        !$api_response['success'] &&
+        stripos($api_response['error'] ?? '', 'invalid argument') !== false
+    ) {
+        $fallbackProvider = get_first_enabled_provider_key($conn, [$provider]);
+        if ($fallbackProvider && $fallbackProvider !== $provider) {
+            error_log("Primary provider {$provider} failed with invalid argument. Falling back to {$fallbackProvider}.");
+            $provider = $fallbackProvider;
+            $api_response = media_api_download(
+                $conn,
+                $media_url,
+                $provider,
+                $format,
+                $quality,
+                $safe_title,
+                $settings['site_name'] ?? 'YT1s Downloader'
+            );
+        }
+    }
     
     if (!$api_response['success']) {
         ob_clean();

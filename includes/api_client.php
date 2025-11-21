@@ -16,7 +16,7 @@ if (!function_exists('get_site_settings_cached')) {
         } else {
             $_site_settings_cache = [
                 'site_name' => 'TikTok Downloader',
-                'fastapi_base_url' => 'http://127.0.0.1:8000',
+                'fastapi_base_url' => 'http://127.0.0.1:8001',
                 'fastapi_auth_key' => 'change-me',
                 'jwt_secret' => 'change-me',
                 'active_api_provider' => 'ytdlp',

@@ -279,332 +279,317 @@ function setLanguageToggleDetails(code) {
     toggle.textContent = (code || 'en').toUpperCase();
 }
 
-// YouTube Download Functionality
+// Helper function to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Render Format Table
+function renderFormatTable(data, containerId) {
+    const selected = data.selected || data.items[0];
+    
+    let html = `
+        <div style="background: #fff; border-radius: 8px; padding: 30px; display: flex; gap: 30px; flex-wrap: wrap;">
+            <!-- Left side: Video thumbnail and info -->
+            <div style="flex: 0 0 400px; min-width: 300px;">
+                ${selected.thumbnail ? `
+                    <div style="position: relative; margin-bottom: 15px;">
+                        <img src="${selected.thumbnail}" alt="Thumbnail" style="width: 100%; border-radius: 8px; display: block;">
+                    </div>
+                ` : ''}
+                <div style="margin-top: 15px;">
+                    <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px; line-height: 1.4;">${escapeHtml(selected.title || 'Video')}</h3>
+                    ${selected.author ? `<p style="margin: 5px 0; color: #666; font-size: 14px;">${escapeHtml(selected.author)}</p>` : ''}
+                </div>
+            </div>
+            
+            <!-- Right side: Download options table -->
+            <div style="flex: 1; min-width: 500px;">
+                <div style="display: flex; gap: 0; margin-bottom: 0; border-bottom: 2px solid #ddd;">
+                    <button class="format-tab-btn active" data-format="mp3" style="padding: 12px 24px; border: none; background: #FF3300; color: white; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 0;">
+                        Audio (MP3)
+                    </button>
+                    <button class="format-tab-btn" data-format="mp4" style="padding: 12px 24px; border: none; background: #e0e0e0; color: #333; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 0;">
+                        Video (MP4)
+                    </button>
+                </div>
+                
+                <div id="download-options-mp3" class="download-options" style="display: block; background: #f9f9f9;">
+                    <table style="width: 100%; border-collapse: collapse; background: #fff;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">File type</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">Format</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 320kbps</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="320" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 256kbps</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="256" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 128kbps</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="128" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 96kbps</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="96" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 64kbps</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="64" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="download-options-mp4" class="download-options" style="display: none; background: #f9f9f9;">
+                    <table style="width: 100%; border-collapse: collapse; background: #fff;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">File type</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">Format</th>
+                                <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP4 auto quality</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>1080p (.mp4)</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="1080" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>720p (.mp4)</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="720" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>480p (.mp4)</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="480" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>360p (.mp4)</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="360" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>240p (.mp4)</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="240" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>144p (.mp4)</strong></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #eee;">
+                                    <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="144" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                        <span>⬇</span> Download
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    const resultsContainer = document.getElementById(containerId);
+    if (resultsContainer) {
+        resultsContainer.innerHTML = html;
+        
+        // Handle format tabs
+        document.querySelectorAll('.format-tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const format = this.dataset.format;
+                
+                // Update active tab
+                document.querySelectorAll('.format-tab-btn').forEach(b => {
+                    b.classList.remove('active');
+                    b.style.background = '#e0e0e0';
+                    b.style.color = '#333';
+                });
+                this.classList.add('active');
+                this.style.background = '#FF3300';
+                this.style.color = 'white';
+                
+                // Show/hide options
+                document.querySelectorAll('.download-options').forEach(opt => {
+                    opt.style.display = 'none';
+                });
+                document.getElementById(`download-options-${format}`).style.display = 'block';
+            });
+        });
+        
+        // Handle download buttons
+        document.querySelectorAll('.download-btn').forEach(btn => {
+            btn.addEventListener('click', handleDownloadClick);
+        });
+    }
+}
+
+async function handleDownloadClick() {
+    const btn = this;
+    const searchId = btn.dataset.searchId;
+    const itemIndex = parseInt(btn.dataset.itemIndex);
+    const format = btn.dataset.format;
+    const quality = btn.dataset.quality;
+    
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Preparing...';
+    
+    try {
+        const formData = new FormData();
+        formData.append('search_id', searchId);
+        formData.append('item_index', itemIndex);
+        formData.append('format', format);
+        if (quality && quality.trim() !== '') {
+            formData.append('quality', quality);
+        }
+        
+        // Add timeout and better error handling
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+        
+        const response = await fetch('/api_download.php', {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Get response text first to check if it's valid JSON
+        const responseText = await response.text();
+        let data;
+        
+        try {
+            data = JSON.parse(responseText);
+        } catch (jsonError) {
+            console.error('Invalid JSON response:', responseText.substring(0, 500));
+            if (!response.ok) {
+                 throw new Error(`Server error (${response.status}). Please try again.`);
+            }
+            throw new Error('Invalid response from server. The download may still be processing. Please wait a moment and try again.');
+        }
+
+        // Check if response is OK
+        if (!response.ok) {
+            const errorMsg = data.error || data.detail || `Server error (${response.status})`;
+            console.error('HTTP error response:', response.status, errorMsg);
+            throw new Error(errorMsg);
+        }
+        
+        if (data.success && data.download_url) {
+            // Trigger download
+            window.location.href = data.download_url;
+        } else {
+            const errorMsg = data.error || data.details?.error || 'Failed to prepare download';
+            console.error('Download failed:', data);
+            alert(errorMsg);
+            btn.disabled = false;
+            btn.textContent = originalText;
+        }
+    } catch (error) {
+        if (typeof timeoutId !== 'undefined') {
+            clearTimeout(timeoutId);
+        }
+        console.error('Download error:', error);
+        
+        let errorMessage = 'An error occurred. ';
+        if (error.name === 'AbortError') {
+            errorMessage += 'The request took too long. The file might be large - please try again.';
+        } else if (error.message) {
+            errorMessage += error.message;
+        } else {
+            errorMessage += 'Please try again.';
+        }
+        
+        alert(errorMessage);
+        btn.disabled = false;
+        btn.textContent = originalText;
+    }
+}
+
+// Page Logic
 (function() {
+    const path = window.location.pathname.toLowerCase();
+    
+    // Function to get query parameter
+    function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+
+    // Home / MP3 / MP4 Page Logic
     function initYouTubeDownloader() {
         const convertBtn = document.querySelector('.convert-btn');
         const searchInput = document.querySelector('.search-input');
         
         if (!convertBtn || !searchInput) {
             return;
-        }
-        
-        function showLoading() {
-            convertBtn.disabled = true;
-            const originalText = convertBtn.textContent;
-            convertBtn.textContent = 'Converting...';
-            convertBtn.dataset.originalText = originalText;
-        }
-        
-        function hideLoading() {
-            convertBtn.disabled = false;
-            if (convertBtn.dataset.originalText) {
-                convertBtn.textContent = convertBtn.dataset.originalText;
-            }
-        }
-        
-        function showError(message) {
-            hideLoading();
-            alert(message || 'An error occurred. Please try again.');
-        }
-        
-        function showResults(data) {
-            hideLoading();
-            
-            // Create results container
-            let resultsContainer = document.getElementById('download-results');
-            if (!resultsContainer) {
-                resultsContainer = document.createElement('div');
-                resultsContainer.id = 'download-results';
-                resultsContainer.style.cssText = 'max-width: 1400px; margin: 40px auto; padding: 20px; background: #f5f5f5; min-height: 500px;';
-                
-                // Insert after hero section
-                const heroSection = document.querySelector('.hero');
-                if (heroSection && heroSection.parentNode) {
-                    heroSection.parentNode.insertBefore(resultsContainer, heroSection.nextSibling);
-                }
-            }
-            
-            const selected = data.selected || data.items[0];
-            const items = data.items || [selected];
-            
-            // Build results HTML - matching the image layout: thumbnail left, table right
-            let html = `
-                <div style="background: #fff; border-radius: 8px; padding: 30px; display: flex; gap: 30px; flex-wrap: wrap;">
-                    <!-- Left side: Video thumbnail and info -->
-                    <div style="flex: 0 0 400px; min-width: 300px;">
-                        ${selected.thumbnail ? `
-                            <div style="position: relative; margin-bottom: 15px;">
-                                <img src="${selected.thumbnail}" alt="Thumbnail" style="width: 100%; border-radius: 8px; display: block;">
-                            </div>
-                        ` : ''}
-                        <div style="margin-top: 15px;">
-                            <h3 style="margin: 0 0 10px 0; color: #333; font-size: 16px; line-height: 1.4;">${escapeHtml(selected.title || 'Video')}</h3>
-                            ${selected.author ? `<p style="margin: 5px 0; color: #666; font-size: 14px;">${escapeHtml(selected.author)}</p>` : ''}
-                        </div>
-                    </div>
-                    
-                    <!-- Right side: Download options table -->
-                    <div style="flex: 1; min-width: 500px;">
-                        <div style="display: flex; gap: 0; margin-bottom: 0; border-bottom: 2px solid #ddd;">
-                            <button class="format-tab-btn active" data-format="mp3" style="padding: 12px 24px; border: none; background: #FF3300; color: white; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 0;">
-                                Audio (MP3)
-                            </button>
-                            <button class="format-tab-btn" data-format="mp4" style="padding: 12px 24px; border: none; background: #e0e0e0; color: #333; cursor: pointer; font-weight: bold; font-size: 14px; border-radius: 0;">
-                                Video (MP4)
-                            </button>
-                        </div>
-                        
-                        <div id="download-options-mp3" class="download-options" style="display: block; background: #f9f9f9;">
-                            <table style="width: 100%; border-collapse: collapse; background: #fff;">
-                                <thead>
-                                    <tr style="background: #f5f5f5;">
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">File type</th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">Format</th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 320kbps</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="320" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 256kbps</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="256" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 128kbps</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="128" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 96kbps</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="96" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP3 - 64kbps</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp3" data-quality="64" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div id="download-options-mp4" class="download-options" style="display: none; background: #f9f9f9;">
-                            <table style="width: 100%; border-collapse: collapse; background: #fff;">
-                                <thead>
-                                    <tr style="background: #f5f5f5;">
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">File type</th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">Format</th>
-                                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid #ddd; font-weight: 600;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>MP4 auto quality</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>1080p (.mp4)</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="1080" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>720p (.mp4)</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="720" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>480p (.mp4)</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="480" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>360p (.mp4)</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="360" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>240p (.mp4)</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="240" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;"><strong>144p (.mp4)</strong></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">Auto</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #eee;">
-                                            <button class="download-btn" data-search-id="${data.search_id}" data-item-index="0" data-format="mp4" data-quality="144" style="background: #FF3300; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                                                <span>⬇</span> Download
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            resultsContainer.innerHTML = html;
-            
-            // Scroll to results
-            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            
-            // Handle format tabs
-            document.querySelectorAll('.format-tab-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const format = this.dataset.format;
-                    
-                    // Update active tab
-                    document.querySelectorAll('.format-tab-btn').forEach(b => {
-                        b.classList.remove('active');
-                        b.style.background = '#e0e0e0';
-                        b.style.color = '#333';
-                    });
-                    this.classList.add('active');
-                    this.style.background = '#FF3300';
-                    this.style.color = 'white';
-                    
-                    // Show/hide options
-                    document.querySelectorAll('.download-options').forEach(opt => {
-                        opt.style.display = 'none';
-                    });
-                    document.getElementById(`download-options-${format}`).style.display = 'block';
-                });
-            });
-            
-            // Handle download buttons
-            document.querySelectorAll('.download-btn').forEach(btn => {
-                btn.addEventListener('click', async function() {
-                    const searchId = this.dataset.searchId;
-                    const itemIndex = parseInt(this.dataset.itemIndex);
-                    const format = this.dataset.format;
-                    const quality = this.dataset.quality;
-                    
-                    const originalText = this.textContent;
-                    this.disabled = true;
-                    this.textContent = 'Preparing...';
-                    
-                    try {
-                        const formData = new FormData();
-                        formData.append('search_id', searchId);
-                        formData.append('item_index', itemIndex);
-                        formData.append('format', format);
-                        if (quality && quality.trim() !== '') {
-                            formData.append('quality', quality);
-                        }
-                        
-                        // Add timeout and better error handling
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
-                        
-                        const response = await fetch('/api_download.php', {
-                            method: 'POST',
-                            body: formData,
-                            signal: controller.signal
-                        });
-                        
-                        clearTimeout(timeoutId);
-                        
-                        // Check if response is OK
-                        if (!response.ok) {
-                            const errorText = await response.text();
-                            console.error('HTTP error response:', response.status, errorText);
-                            throw new Error(`Server error (${response.status}). Please try again.`);
-                        }
-                        
-                        // Get response text first to check if it's valid JSON
-                        const responseText = await response.text();
-                        let data;
-                        
-                        try {
-                            data = JSON.parse(responseText);
-                        } catch (jsonError) {
-                            console.error('Invalid JSON response:', responseText.substring(0, 500));
-                            console.error('JSON parse error:', jsonError);
-                            throw new Error('Invalid response from server. The download may still be processing. Please wait a moment and try again.');
-                        }
-                        
-                        if (data.success && data.download_url) {
-                            // Trigger download
-                            window.location.href = data.download_url;
-                        } else {
-                            const errorMsg = data.error || data.details?.error || 'Failed to prepare download';
-                            console.error('Download failed:', data);
-                            alert(errorMsg);
-                            this.disabled = false;
-                            this.textContent = originalText;
-                        }
-                    } catch (error) {
-                        if (typeof timeoutId !== 'undefined') {
-                            clearTimeout(timeoutId);
-                        }
-                        console.error('Download error:', error);
-                        
-                        let errorMessage = 'An error occurred. ';
-                        if (error.name === 'AbortError') {
-                            errorMessage += 'The request took too long. The file might be large - please try again.';
-                        } else if (error.message) {
-                            errorMessage += error.message;
-                        } else {
-                            errorMessage += 'Please try again.';
-                        }
-                        
-                        alert(errorMessage);
-                        this.disabled = false;
-                        this.textContent = originalText;
-                    }
-                });
-            });
         }
         
         async function handleConvert() {
@@ -615,21 +600,8 @@ function setLanguageToggleDetails(code) {
                 return;
             }
             
-            showLoading();
-            
-            try {
-                const response = await fetch(`/api_search.php?q=${encodeURIComponent(query)}`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    showResults(data);
-                } else {
-                    showError(data.error || 'Failed to search for video');
-                }
-            } catch (error) {
-                console.error('Search error:', error);
-                showError('An error occurred. Please try again.');
-            }
+            // Redirect to search page
+            window.location.href = 'search.html?q=' + encodeURIComponent(query);
         }
         
         // Handle convert button click
@@ -643,12 +615,124 @@ function setLanguageToggleDetails(code) {
             }
         });
     }
-    
-    // Initialize when DOM is ready
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initYouTubeDownloader);
+
+    // Search Page Logic
+    function initSearchPage() {
+        const query = getQueryParam('q');
+        const resultContainer = document.getElementById('search-result-container');
+        const loadingDiv = document.getElementById('search-loading');
+        
+        // Hide language dropdown on search page
+        const langDropdown = document.querySelector('.language-dropdown');
+        if (langDropdown) langDropdown.style.display = 'none';
+        
+        if (!query) {
+            // If no query, maybe redirect home or show empty state
+            return;
+        }
+        
+        // Set title to query for context
+        // document.title = `${query} - Search`;
+        
+        if (loadingDiv) loadingDiv.style.display = 'block';
+        
+        fetch(`/api_search.php?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                
+                if (data.success) {
+                    const selected = data.selected || data.items[0];
+                    if (selected) {
+                        document.getElementById('search-thumbnail').src = selected.thumbnail;
+                        document.getElementById('search-title').textContent = selected.title;
+                        // URL removed as requested
+                        // document.getElementById('search-url').textContent = selected.url || query;
+                        const urlElem = document.getElementById('search-url');
+                        if (urlElem) urlElem.style.display = 'none';
+                        
+                        const downloadLink = document.getElementById('search-download-link');
+                        // Redirect to download page with q=URL (or ID if available and robust)
+                        // Using URL allows re-fetching info on download page
+                        const videoUrl = selected.url || query;
+                        downloadLink.href = `download.html?q=${encodeURIComponent(videoUrl)}`;
+                        
+                        if (resultContainer) resultContainer.style.display = 'block';
+                    } else {
+                        alert('No results found.');
+                    }
+                } else {
+                    alert(data.error || 'Failed to search.');
+                }
+            })
+            .catch(err => {
+                if (loadingDiv) loadingDiv.style.display = 'none';
+                console.error(err);
+                alert('An error occurred during search.');
+            });
+    }
+
+    // Download Page Logic
+    function initDownloadPage() {
+        const query = getQueryParam('q');
+        const resultsDiv = document.getElementById('download-results');
+        const videoInfoDiv = document.getElementById('video-info');
+        
+        // Hide language dropdown on download page
+        const langDropdown = document.querySelector('.language-dropdown');
+        if (langDropdown) langDropdown.style.display = 'none';
+        
+        if (!query) {
+            return;
+        }
+        
+        // Show loading spinner is default in HTML
+        
+        fetch(`/api_search.php?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const selected = data.selected || data.items[0];
+                    
+                    if (videoInfoDiv) {
+                        // Hide video info as requested
+                        videoInfoDiv.style.display = 'none';
+                        // videoInfoDiv.style.display = 'block';
+                        // document.getElementById('video-title').textContent = selected.title;
+                        // document.getElementById('video-url').textContent = selected.url || query;
+                    }
+                    
+                    renderFormatTable(data, 'download-results');
+                } else {
+                    if (resultsDiv) resultsDiv.innerHTML = `<p style="text-align:center; color:red;">${data.error || 'Failed to load video info.'}</p>`;
+                }
+            })
+            .catch(err => {
+                if (resultsDiv) resultsDiv.innerHTML = `<p style="text-align:center; color:red;">An error occurred.</p>`;
+                console.error(err);
+            });
+    }
+
+    // Route to appropriate logic
+    if (path.includes('search.html') || path.includes('/search/')) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSearchPage);
+        } else {
+            initSearchPage();
+        }
+    } else if (path.includes('download.html') || path.includes('/download/')) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDownloadPage);
+        } else {
+            initDownloadPage();
+        }
     } else {
-        initYouTubeDownloader();
+        // Home, MP3, MP4 pages
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initYouTubeDownloader);
+        } else {
+            initYouTubeDownloader();
+        }
     }
 })();
 
@@ -970,9 +1054,13 @@ async function translatePage(lang) {
         setLanguageToggleDetails(savedLang);
         
         // Always load content from API (even for English, so admin changes show up)
-        loadContentFromAPI(savedLang, page).then(() => {
-            // Load FAQs after content is loaded
-            loadFAQs(savedLang);
+        // Only for main pages, search/download handle their own content usually (or share home fields?)
+        // For now, load home content for search/download so common elements like nav/footer are translated
+        loadContentFromAPI(savedLang, page === 'mp3' || page === 'mp4' ? page : 'home').then(() => {
+            // Load FAQs only for main pages
+            if (!window.location.pathname.includes('search.html') && !window.location.pathname.includes('download.html')) {
+                loadFAQs(savedLang);
+            }
         });
         
         // Setup dropdown toggle functionality
@@ -1021,8 +1109,10 @@ async function translatePage(lang) {
                     const contentData = await loadContentFromAPI(selectedLang, page);
                     
                     if (contentData) {
-                        // Reload FAQs for the new language
-                        await loadFAQs(selectedLang);
+                        // Reload FAQs for the new language (if main page)
+                        if (!window.location.pathname.includes('search.html') && !window.location.pathname.includes('download.html')) {
+                            await loadFAQs(selectedLang);
+                        }
                         
                         // Close dropdown after selection
                         languageMenu.classList.remove('show');
@@ -1325,4 +1415,3 @@ function initFAQAccordion() {
 }
 
 // Format labels are loaded via loadContentFromAPI which applies to data-i18n attributes
-

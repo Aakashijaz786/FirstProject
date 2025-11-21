@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download - YT1S</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/features.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="images/logo.webp" alt="YT1s Logo" class="logo-image" data-image-key="logoImage" data-i18n="logoImage">
+                    <span class="logo-text">YT1s</span>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link" data-i18n="navDownloader">Youtube Downloader</a>
+                    <a href="youtube-to-mp3.html" class="nav-link" data-i18n="navMP3">Youtube to MP3</a>
+                    <a href="youtube-to-mp4.html" class="nav-link" data-i18n="navMP4">Youtube to MP4</a>
+                    <div class="language-dropdown">
+                        <a href="#" class="nav-link language-toggle" id="languageToggle">English</a>
+                        <div class="language-menu" id="languageMenu">
+                            <!-- Language items will be injected by JS -->
+                        </div>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Download Section -->
+    <section class="hero" style="padding-bottom: 60px;">
+        <div class="container">
+            <!-- Video Info -->
+            <div id="video-info" style="margin-bottom: 30px; display: none;">
+                <h1 id="video-title" class="hero-title" style="font-size: 24px; margin-bottom: 10px;">Loading...</h1>
+                <p id="video-url" style="color: #666; word-break: break-all;"></p>
+            </div>
+
+            <!-- Download Results Container -->
+            <div id="download-results">
+                <!-- Dynamic content will be injected here by script.js -->
+                <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #FF3300; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <style>
+                    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                </style>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <a href="#" class="footer-link" data-i18n="contact">Contact us</a>
+                    <a href="#" class="footer-link" data-i18n="privacy">Privacy Policy</a>
+                    <a href="#" class="footer-link" data-i18n="terms">Terms of service</a>
+                </div>
+                <div class="footer-copyright">
+                    <p data-i18n="copyright">&copy; 2025 Yt1s</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <!-- Scripts -->
+    <script src="js/script.js"></script>
+</body>
+</html>
+
