@@ -585,10 +585,10 @@ async function handleDownloadClick() {
 
     // Home / MP3 / MP4 Page Logic
     function initYouTubeDownloader() {
-        const convertBtn = document.querySelector('.convert-btn');
+        const convertBtns = document.querySelectorAll('.convert-btn');
         const searchInput = document.querySelector('.search-input');
 
-        if (!convertBtn || !searchInput) {
+        if (!convertBtns.length || !searchInput) {
             return;
         }
 
@@ -600,12 +600,19 @@ async function handleDownloadClick() {
                 return;
             }
 
-            // Redirect to search page
-            window.location.href = 'search.html?q=' + encodeURIComponent(query);
+            // Get current language code to preserve it in the search URL
+            const currentLang = window.getCurrentLanguageCode ? window.getCurrentLanguageCode() : (localStorage.getItem('yt_frontend_lang') || localStorage.getItem('selectedLanguage') || 'en').toLowerCase();
+            console.log('Redirecting to search with language:', currentLang);
+            
+            // Redirect to search page with language code: /{lang}/search.html?q=...
+            // The PHP router will convert this to /{lang}/search/{jwt}/
+            window.location.href = '/' + currentLang + '/search.html?q=' + encodeURIComponent(query);
         }
 
-        // Handle convert button click
-        convertBtn.addEventListener('click', handleConvert);
+        // Handle all convert button clicks
+        convertBtns.forEach(btn => {
+            btn.addEventListener('click', handleConvert);
+        });
 
         // Handle Enter key in search input
         searchInput.addEventListener('keypress', function (e) {
@@ -616,8 +623,52 @@ async function handleDownloadClick() {
         });
     }
 
+    // Helper function to save language to cookie (for PHP router to read) - make it globally accessible
+    window.saveLanguageToCookie = function(lang) {
+        // Save to cookie with 30 days expiry
+        const expiryDate = new Date();
+        expiryDate.setTime(expiryDate.getTime() + (30 * 24 * 60 * 60 * 1000));
+        document.cookie = 'yt_frontend_lang=' + lang + '; expires=' + expiryDate.toUTCString() + '; path=/';
+        document.cookie = 'site_lang=' + lang + '; expires=' + expiryDate.toUTCString() + '; path=/';
+    };
+
+    // Helper function to get current language code from URL or storage (make it globally accessible)
+    window.getCurrentLanguageCode = function() {
+        // First, try to get from URL (e.g., /en/search/{jwt}/ or /es/download/{jwt}/)
+        const pathMatch = window.location.pathname.match(/^\/([a-z]{2})\/(search|download)\//);
+        if (pathMatch && pathMatch[1]) {
+            const lang = pathMatch[1].toLowerCase();
+            // Save it for future use
+            localStorage.setItem('yt_frontend_lang', lang);
+            localStorage.setItem('selectedLanguage', lang);
+            if (window.saveLanguageToCookie) window.saveLanguageToCookie(lang);
+            console.log('Language detected from search/download URL:', lang);
+            return lang;
+        }
+        // Try to get from any language prefix in URL (e.g., /es/, /fr/youtube-to-mp3, /en/)
+        const langMatch = window.location.pathname.match(/^\/([a-z]{2})(\/|$)/);
+        if (langMatch && langMatch[1]) {
+            const lang = langMatch[1].toLowerCase();
+            localStorage.setItem('yt_frontend_lang', lang);
+            localStorage.setItem('selectedLanguage', lang);
+            if (window.saveLanguageToCookie) window.saveLanguageToCookie(lang);
+            console.log('Language detected from URL prefix:', lang);
+            return lang;
+        }
+        // Fallback to stored language preference
+        const savedLang = localStorage.getItem('yt_frontend_lang') || localStorage.getItem('selectedLanguage') || 'en';
+        const lang = savedLang.toLowerCase();
+        saveLanguageToCookie(lang);
+        console.log('Language from localStorage:', lang);
+        return lang;
+    };
+
     // Search Page Logic
-    function initSearchPage() {
+    async function initSearchPage() {
+        // Load language content immediately on page load (before search fetch)
+        const savedLang = window.getCurrentLanguageCode ? window.getCurrentLanguageCode() : (localStorage.getItem('yt_frontend_lang') || localStorage.getItem('selectedLanguage') || 'en').toLowerCase();
+        await loadContentFromAPI(savedLang, 'home');
+        
         // Prefer explicit ?q= param, but fall back to JWT payload injected by php_router
         let query = getQueryParam('q');
         if (!query && typeof window !== 'undefined' && window.__JWT_DATA__ && typeof window.__JWT_DATA__.q === 'string') {
@@ -657,10 +708,13 @@ async function handleDownloadClick() {
 
                         const downloadLink = document.getElementById('search-download-link');
                         // Redirect to download page with q=URL (or ID if available and robust)
-                        // IMPORTANT: use an absolute path so it works from SEO URLs like /search/en/{jwt}/
-                        // The PHP router will then convert /download.html?q=... to /download/{lang}/{jwt}/ via JWTHelper.
+                        // IMPORTANT: preserve the language code from the current URL
+                        // The PHP router will then convert /{lang}/download.html?q=... to /{lang}/download/{jwt}/ via JWTHelper.
                         const videoUrl = selected.url || query;
-                        downloadLink.href = `/download.html?q=${encodeURIComponent(videoUrl)}`;
+                        
+                        // Get current language code using the helper function
+                        const currentLang = window.getCurrentLanguageCode ? window.getCurrentLanguageCode() : (localStorage.getItem('yt_frontend_lang') || localStorage.getItem('selectedLanguage') || 'en').toLowerCase();
+                        downloadLink.href = `/${currentLang}/download.html?q=${encodeURIComponent(videoUrl)}`;
 
                         if (resultContainer) resultContainer.style.display = 'block';
                     } else {
@@ -725,13 +779,15 @@ async function handleDownloadClick() {
     }
 
     // Route to appropriate logic
-    if (path.includes('search.html') || path.includes('/search/')) {
+    // Check for search pages: search.html or /{lang}/search/{jwt}/ pattern
+    if (path.includes('search.html') || path.includes('/search/') || /\/[a-z]{2}\/search\//.test(path)) {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initSearchPage);
         } else {
             initSearchPage();
         }
-    } else if (path.includes('download.html') || path.includes('/download/')) {
+    } else if (path.includes('download.html') || path.includes('/download/') || /\/[a-z]{2}\/download\//.test(path)) {
+        // Check for download pages: download.html or /{lang}/download/{jwt}/ pattern
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initDownloadPage);
         } else {
@@ -1064,6 +1120,26 @@ async function translatePage(lang) {
         highlightActiveLanguage(savedLang);
         setLanguageToggleDetails(savedLang);
 
+        // Update navigation links to include language code (make it accessible globally)
+        window.updateNavigationLinks = function() {
+            const currentLang = window.getCurrentLanguageCode ? window.getCurrentLanguageCode() : (localStorage.getItem('yt_frontend_lang') || localStorage.getItem('selectedLanguage') || 'en').toLowerCase();
+            const navLinks = document.querySelectorAll('a[href="youtube-to-mp3.html"], a[href="youtube-to-mp4.html"], a[href="index.html"]');
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === 'youtube-to-mp3.html') {
+                    link.href = '/' + currentLang + '/youtube-to-mp3.html';
+                } else if (href === 'youtube-to-mp4.html') {
+                    link.href = '/' + currentLang + '/youtube-to-mp4.html';
+                } else if (href === 'index.html') {
+                    // For index, use /{lang}/ or just / for default language
+                    link.href = '/' + currentLang + '/';
+                }
+            });
+        };
+        
+        // Update navigation links on page load
+        window.updateNavigationLinks();
+
         // Always load content from API (even for English, so admin changes show up)
         // Only for main pages, search/download handle their own content usually (or share home fields?)
         // For now, load home content for search/download so common elements like nav/footer are translated
@@ -1072,6 +1148,8 @@ async function translatePage(lang) {
             if (!window.location.pathname.includes('search.html') && !window.location.pathname.includes('download.html')) {
                 loadFAQs(savedLang);
             }
+            // Update navigation links again after content loads (in case language changed)
+            updateNavigationLinks();
         });
 
         // Setup dropdown toggle functionality
@@ -1103,9 +1181,14 @@ async function translatePage(lang) {
 
             // Handle language selection - translate page when language is clicked
             languageItems.forEach(item => {
-                item.addEventListener('click', async function (e) {
+                // Remove any existing click handlers to avoid conflicts
+                const newItem = item.cloneNode(true);
+                item.parentNode.replaceChild(newItem, item);
+                
+                newItem.addEventListener('click', async function (e) {
                     e.preventDefault();
                     e.stopPropagation();
+                    e.stopImmediatePropagation(); // Prevent other handlers
 
                     const selectedLang = this.getAttribute('data-lang');
 
@@ -1114,7 +1197,103 @@ async function translatePage(lang) {
                         return;
                     }
 
-                    // Load content from admin portal API for selected language
+                    console.log('Language clicked:', selectedLang);
+                    const currentPath = window.location.pathname;
+                    console.log('Current path:', currentPath);
+                    
+                    // Check if we're on search or download pages with JWT (new format: /{lang}/search/{jwt} or /{lang}/download/{jwt})
+                    // Use non-greedy match and handle trailing slash
+                    const searchMatch = currentPath.match(/^\/([a-z]{2})\/search\/(.+?)(?:\/|$)/);
+                    const downloadMatch = currentPath.match(/^\/([a-z]{2})\/download\/(.+?)(?:\/|$)/);
+                    
+                    console.log('[Script.js] Search match:', searchMatch);
+                    console.log('[Script.js] Download match:', downloadMatch);
+                    
+                    // Helper to save language
+                    function saveLang(lang) {
+                        localStorage.setItem('selectedLanguage', lang);
+                        localStorage.setItem('yt_frontend_lang', lang);
+                        if (window.saveLanguageToCookie) window.saveLanguageToCookie(lang);
+                    }
+                    
+                    // For search/download pages, redirect to new URL with updated language code
+                    if (searchMatch) {
+                        // Redirect to search with new language, keep JWT token
+                        const jwtToken = searchMatch[2];
+                        const newUrl = '/' + selectedLang + '/search/' + jwtToken + '/';
+                        console.log('[Script.js] Redirecting to:', newUrl);
+                        saveLang(selectedLang);
+                        // Use replace instead of href to avoid adding to history
+                        window.location.replace(newUrl);
+                        return;
+                    }
+                    
+                    if (downloadMatch) {
+                        // Redirect to download with new language, keep JWT token
+                        const jwtToken = downloadMatch[2];
+                        const newUrl = '/' + selectedLang + '/download/' + jwtToken + '/';
+                        console.log('[Script.js] Redirecting to:', newUrl);
+                        saveLang(selectedLang);
+                        // Use replace instead of href to avoid adding to history
+                        window.location.replace(newUrl);
+                        return;
+                    }
+                    
+                    // Check if we're on youtube-to-mp3 or youtube-to-mp4 pages
+                    const mp3Match = currentPath.match(/^\/([a-z]{2})\/youtube-to-mp3\.html/);
+                    const mp4Match = currentPath.match(/^\/([a-z]{2})\/youtube-to-mp4\.html/);
+                    
+                    if (mp3Match) {
+                        // Redirect to mp3 page with new language
+                        saveLang(selectedLang);
+                        window.location.href = '/' + selectedLang + '/youtube-to-mp3.html';
+                        return;
+                    }
+                    
+                    if (mp4Match) {
+                        // Redirect to mp4 page with new language
+                        saveLang(selectedLang);
+                        window.location.href = '/' + selectedLang + '/youtube-to-mp4.html';
+                        return;
+                    }
+
+                    // Check if we're on home page (/{lang}/ or just /)
+                    const homeMatch = currentPath.match(/^\/([a-z]{2})\/?$/);
+                    const isRootPath = currentPath === '/' || currentPath === '';
+                    
+                    if (homeMatch || isRootPath) {
+                        // Redirect to home page with new language
+                        saveLang(selectedLang);
+                        window.location.href = '/' + selectedLang + '/';
+                        return;
+                    }
+                    
+                    // Check if we're on pages without language prefix (old format)
+                    // These should redirect to new format with language code
+                    if (currentPath === '/youtube-to-mp3.html' || currentPath === '/youtube-to-mp4.html') {
+                        const pageType = currentPath.includes('mp3') ? 'youtube-to-mp3.html' : 'youtube-to-mp4.html';
+                        saveLang(selectedLang);
+                        window.location.href = '/' + selectedLang + '/' + pageType;
+                        return;
+                    }
+
+                    // For other pages that already have language prefix, redirect to update URL
+                    // This ensures URL always reflects the current language
+                    const existingLangMatch = currentPath.match(/^\/([a-z]{2})\/(.+)/);
+                    if (existingLangMatch) {
+                        const existingLang = existingLangMatch[1];
+                        const restOfPath = existingLangMatch[2];
+                        
+                        // Only redirect if language is actually changing
+                        if (existingLang !== selectedLang) {
+                            saveLang(selectedLang);
+                            window.location.href = '/' + selectedLang + '/' + restOfPath;
+                            return;
+                        }
+                    }
+                    
+                    // Fallback: For pages without language prefix, translate content without redirecting
+                    // (This should rarely happen now since most pages have language prefix)
                     const page = window.location.pathname.includes('mp3') ? 'mp3' :
                         window.location.pathname.includes('mp4') ? 'mp4' : 'home';
                     const contentData = await loadContentFromAPI(selectedLang, page);
@@ -1128,10 +1307,15 @@ async function translatePage(lang) {
                         // Close dropdown after selection
                         languageMenu.classList.remove('show');
 
-                        // Store selected language in localStorage for persistence
-                        localStorage.setItem('selectedLanguage', selectedLang);
+                        // Store selected language in localStorage and cookie for persistence
+                        saveLang(selectedLang);
                         setLanguageToggleDetails(selectedLang);
                         highlightActiveLanguage(selectedLang);
+                        
+                        // Update navigation links with new language
+                        if (typeof window.updateNavigationLinks === 'function') {
+                            window.updateNavigationLinks();
+                        }
                     } else {
                         console.error('Failed to load content from API');
                     }
