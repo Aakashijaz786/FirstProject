@@ -394,7 +394,7 @@ if ($uri === '' || $uri === false) {
 
     if (!empty($home_slug)) {
         // Always redirect to the current home slug if it exists
-        header('Location: /' . $home_slug, true, 301);
+        header('Location: /', true, 301);
         exit;
     } else {
         // Show the home page for the default language (no slug)

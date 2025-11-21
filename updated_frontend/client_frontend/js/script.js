@@ -289,7 +289,7 @@ function escapeHtml(text) {
 // Render Format Table
 function renderFormatTable(data, containerId) {
     const selected = data.selected || data.items[0];
-    
+
     let html = `
         <div style="background: #fff; border-radius: 8px; padding: 30px; display: flex; gap: 30px; flex-wrap: wrap;">
             <!-- Left side: Video thumbnail and info -->
@@ -454,16 +454,16 @@ function renderFormatTable(data, containerId) {
             </div>
         </div>
     `;
-    
+
     const resultsContainer = document.getElementById(containerId);
     if (resultsContainer) {
         resultsContainer.innerHTML = html;
-        
+
         // Handle format tabs
         document.querySelectorAll('.format-tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 const format = this.dataset.format;
-                
+
                 // Update active tab
                 document.querySelectorAll('.format-tab-btn').forEach(b => {
                     b.classList.remove('active');
@@ -473,7 +473,7 @@ function renderFormatTable(data, containerId) {
                 this.classList.add('active');
                 this.style.background = '#FF3300';
                 this.style.color = 'white';
-                
+
                 // Show/hide options
                 document.querySelectorAll('.download-options').forEach(opt => {
                     opt.style.display = 'none';
@@ -481,7 +481,7 @@ function renderFormatTable(data, containerId) {
                 document.getElementById(`download-options-${format}`).style.display = 'block';
             });
         });
-        
+
         // Handle download buttons
         document.querySelectorAll('.download-btn').forEach(btn => {
             btn.addEventListener('click', handleDownloadClick);
@@ -495,11 +495,11 @@ async function handleDownloadClick() {
     const itemIndex = parseInt(btn.dataset.itemIndex);
     const format = btn.dataset.format;
     const quality = btn.dataset.quality;
-    
+
     const originalText = btn.textContent;
     btn.disabled = true;
     btn.textContent = 'Preparing...';
-    
+
     try {
         const formData = new FormData();
         formData.append('search_id', searchId);
@@ -508,29 +508,29 @@ async function handleDownloadClick() {
         if (quality && quality.trim() !== '') {
             formData.append('quality', quality);
         }
-        
+
         // Add timeout and better error handling
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
-        
+
         const response = await fetch('/api_download.php', {
             method: 'POST',
             body: formData,
             signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
-        
+
         // Get response text first to check if it's valid JSON
         const responseText = await response.text();
         let data;
-        
+
         try {
             data = JSON.parse(responseText);
         } catch (jsonError) {
             console.error('Invalid JSON response:', responseText.substring(0, 500));
             if (!response.ok) {
-                 throw new Error(`Server error (${response.status}). Please try again.`);
+                throw new Error(`Server error (${response.status}). Please try again.`);
             }
             throw new Error('Invalid response from server. The download may still be processing. Please wait a moment and try again.');
         }
@@ -541,7 +541,7 @@ async function handleDownloadClick() {
             console.error('HTTP error response:', response.status, errorMsg);
             throw new Error(errorMsg);
         }
-        
+
         if (data.success && data.download_url) {
             // Trigger download
             window.location.href = data.download_url;
@@ -557,7 +557,7 @@ async function handleDownloadClick() {
             clearTimeout(timeoutId);
         }
         console.error('Download error:', error);
-        
+
         let errorMessage = 'An error occurred. ';
         if (error.name === 'AbortError') {
             errorMessage += 'The request took too long. The file might be large - please try again.';
@@ -566,7 +566,7 @@ async function handleDownloadClick() {
         } else {
             errorMessage += 'Please try again.';
         }
-        
+
         alert(errorMessage);
         btn.disabled = false;
         btn.textContent = originalText;
@@ -574,9 +574,9 @@ async function handleDownloadClick() {
 }
 
 // Page Logic
-(function() {
+(function () {
     const path = window.location.pathname.toLowerCase();
-    
+
     // Function to get query parameter
     function getQueryParam(name) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -587,28 +587,28 @@ async function handleDownloadClick() {
     function initYouTubeDownloader() {
         const convertBtn = document.querySelector('.convert-btn');
         const searchInput = document.querySelector('.search-input');
-        
+
         if (!convertBtn || !searchInput) {
             return;
         }
-        
+
         async function handleConvert() {
             const query = searchInput.value.trim();
-            
+
             if (!query) {
                 alert('Please enter a YouTube URL or search query');
                 return;
             }
-            
+
             // Redirect to search page
             window.location.href = 'search.html?q=' + encodeURIComponent(query);
         }
-        
+
         // Handle convert button click
         convertBtn.addEventListener('click', handleConvert);
-        
+
         // Handle Enter key in search input
-        searchInput.addEventListener('keypress', function(e) {
+        searchInput.addEventListener('keypress', function (e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 handleConvert();
@@ -618,29 +618,33 @@ async function handleDownloadClick() {
 
     // Search Page Logic
     function initSearchPage() {
-        const query = getQueryParam('q');
+        // Prefer explicit ?q= param, but fall back to JWT payload injected by php_router
+        let query = getQueryParam('q');
+        if (!query && typeof window !== 'undefined' && window.__JWT_DATA__ && typeof window.__JWT_DATA__.q === 'string') {
+            query = window.__JWT_DATA__.q;
+        }
         const resultContainer = document.getElementById('search-result-container');
         const loadingDiv = document.getElementById('search-loading');
-        
+
         // Hide language dropdown on search page
         const langDropdown = document.querySelector('.language-dropdown');
         if (langDropdown) langDropdown.style.display = 'none';
-        
+
         if (!query) {
             // If no query, maybe redirect home or show empty state
             return;
         }
-        
+
         // Set title to query for context
         // document.title = `${query} - Search`;
-        
+
         if (loadingDiv) loadingDiv.style.display = 'block';
-        
+
         fetch(`/api_search.php?q=${encodeURIComponent(query)}`)
             .then(response => response.json())
             .then(data => {
                 if (loadingDiv) loadingDiv.style.display = 'none';
-                
+
                 if (data.success) {
                     const selected = data.selected || data.items[0];
                     if (selected) {
@@ -650,13 +654,14 @@ async function handleDownloadClick() {
                         // document.getElementById('search-url').textContent = selected.url || query;
                         const urlElem = document.getElementById('search-url');
                         if (urlElem) urlElem.style.display = 'none';
-                        
+
                         const downloadLink = document.getElementById('search-download-link');
                         // Redirect to download page with q=URL (or ID if available and robust)
-                        // Using URL allows re-fetching info on download page
+                        // IMPORTANT: use an absolute path so it works from SEO URLs like /search/en/{jwt}/
+                        // The PHP router will then convert /download.html?q=... to /download/{lang}/{jwt}/ via JWTHelper.
                         const videoUrl = selected.url || query;
-                        downloadLink.href = `download.html?q=${encodeURIComponent(videoUrl)}`;
-                        
+                        downloadLink.href = `/download.html?q=${encodeURIComponent(videoUrl)}`;
+
                         if (resultContainer) resultContainer.style.display = 'block';
                     } else {
                         alert('No results found.');
@@ -677,31 +682,37 @@ async function handleDownloadClick() {
         const query = getQueryParam('q');
         const resultsDiv = document.getElementById('download-results');
         const videoInfoDiv = document.getElementById('video-info');
-        
+
         // Hide language dropdown on download page
         const langDropdown = document.querySelector('.language-dropdown');
         if (langDropdown) langDropdown.style.display = 'none';
-        
-        if (!query) {
+
+        // Prefer explicit ?q= param, but fall back to JWT payload injected by php_router
+        let effectiveQuery = query;
+        if (!effectiveQuery && typeof window !== 'undefined' && window.__JWT_DATA__ && typeof window.__JWT_DATA__.q === 'string') {
+            effectiveQuery = window.__JWT_DATA__.q;
+        }
+
+        if (!effectiveQuery) {
             return;
         }
-        
+
         // Show loading spinner is default in HTML
-        
-        fetch(`/api_search.php?q=${encodeURIComponent(query)}`)
+
+        fetch(`/api_search.php?q=${encodeURIComponent(effectiveQuery)}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     const selected = data.selected || data.items[0];
-                    
+
                     if (videoInfoDiv) {
                         // Hide video info as requested
                         videoInfoDiv.style.display = 'none';
                         // videoInfoDiv.style.display = 'block';
                         // document.getElementById('video-title').textContent = selected.title;
-                        // document.getElementById('video-url').textContent = selected.url || query;
+                        // document.getElementById('video-url').textContent = selected.url || effectiveQuery;
                     }
-                    
+
                     renderFormatTable(data, 'download-results');
                 } else {
                     if (resultsDiv) resultsDiv.innerHTML = `<p style="text-align:center; color:red;">${data.error || 'Failed to load video info.'}</p>`;
@@ -769,7 +780,7 @@ async function testAPIConnection() {
 function storeOriginalTexts() {
     const count = document.querySelectorAll('[data-i18n]').length;
     console.log(`Found ${count} elements with data-i18n attribute`);
-    
+
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
         if (key) {
@@ -780,24 +791,24 @@ function storeOriginalTexts() {
             }
         }
     });
-    
+
     console.log(`Stored ${originalTexts.size} original texts`);
 }
 
 // Translate a single text using API
 async function translateText(text, targetLang, sourceLang = 'en') {
     const cacheKey = `${text}_${targetLang}`;
-    
+
     // Check cache first
     if (translationCache.has(cacheKey)) {
         return translationCache.get(cacheKey);
     }
-    
+
     // If target is English, return original
     if (targetLang === 'en' || targetLang === sourceLang) {
         return text;
     }
-    
+
     try {
         const response = await fetch(`${API_BASE_URL}/translate`, {
             method: 'POST',
@@ -810,17 +821,17 @@ async function translateText(text, targetLang, sourceLang = 'en') {
                 source_lang: sourceLang
             })
         });
-        
+
         if (!response.ok) {
             throw new Error(`Translation failed: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
         const translated = data.translatedText || text;
-        
+
         // Cache the translation
         translationCache.set(cacheKey, translated);
-        
+
         return translated;
     } catch (error) {
         console.error('Translation error:', error);
@@ -835,15 +846,15 @@ async function translateBatch(texts, targetLang, sourceLang = 'en') {
         console.log('Target language is English, returning originals');
         return texts;
     }
-    
+
     console.log(`Translating ${Object.keys(texts).length} texts to ${targetLang}`);
-    
+
     const BATCH_SIZE = 5; // Translate 5 texts at a time
     const DELAY_BETWEEN_BATCHES = 7000; // 7 seconds between batches (to stay under 10/min limit)
-    
+
     const textEntries = Object.entries(texts);
     const allTranslations = {};
-    
+
     try {
         // Split into smaller batches
         for (let i = 0; i < textEntries.length; i += BATCH_SIZE) {
@@ -851,9 +862,9 @@ async function translateBatch(texts, targetLang, sourceLang = 'en') {
             const batchTexts = Object.fromEntries(batch);
             const batchNum = Math.floor(i / BATCH_SIZE) + 1;
             const totalBatches = Math.ceil(textEntries.length / BATCH_SIZE);
-            
+
             console.log(`Translating batch ${batchNum}/${totalBatches} (${batch.length} texts)`);
-            
+
             const response = await fetch(`${API_BASE_URL}/translate/batch`, {
                 method: 'POST',
                 headers: {
@@ -865,7 +876,7 @@ async function translateBatch(texts, targetLang, sourceLang = 'en') {
                     source_lang: sourceLang
                 })
             });
-            
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error(`Batch ${batchNum} translation failed:`, response.status, response.statusText, errorText);
@@ -876,14 +887,14 @@ async function translateBatch(texts, targetLang, sourceLang = 'en') {
                 console.log(`Batch ${batchNum} translated successfully:`, Object.keys(data.translations || {}).length, 'items');
                 Object.assign(allTranslations, data.translations || batchTexts);
             }
-            
+
             // Wait between batches (except for the last one)
             if (i + BATCH_SIZE < textEntries.length) {
-                console.log(`Waiting ${DELAY_BETWEEN_BATCHES/1000} seconds before next batch...`);
+                console.log(`Waiting ${DELAY_BETWEEN_BATCHES / 1000} seconds before next batch...`);
                 await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
             }
         }
-        
+
         console.log(`Translation complete. Total: ${Object.keys(allTranslations).length} items`);
         return allTranslations;
     } catch (error) {
@@ -896,11 +907,11 @@ async function translateBatch(texts, targetLang, sourceLang = 'en') {
 // Translation function - converts page content to selected language using API
 async function translatePage(lang) {
     console.log('translatePage called with language:', lang);
-    
+
     // Collect all texts to translate
     const textsToTranslate = {};
     const elements = [];
-    
+
     document.querySelectorAll('[data-i18n]').forEach(element => {
         const key = element.getAttribute('data-i18n');
         if (key) {
@@ -910,23 +921,23 @@ async function translatePage(lang) {
             } else {
                 originalText = originalTexts.get(key) || element.textContent.trim();
             }
-            
+
             if (originalText) {
                 textsToTranslate[key] = originalText;
                 elements.push({ element, key });
             }
         }
     });
-    
+
     console.log(`Collected ${Object.keys(textsToTranslate).length} texts to translate`);
     console.log('Sample keys:', Object.keys(textsToTranslate).slice(0, 5));
-    
+
     // If no texts to translate, return
     if (Object.keys(textsToTranslate).length === 0) {
         console.warn('No texts found to translate!');
         return false;
     }
-    
+
     // Show loading state
     const languageToggle = document.getElementById('languageToggle');
     if (languageToggle) {
@@ -935,24 +946,24 @@ async function translatePage(lang) {
         languageToggle.style.opacity = '0.7';
         languageToggle.style.cursor = 'wait';
     }
-    
+
     // Show progress message
     const progressMsg = document.createElement('div');
     progressMsg.id = 'translation-progress';
     progressMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #FF3300; color: white; padding: 15px 20px; border-radius: 8px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
     progressMsg.textContent = 'Translating page... This may take a moment.';
     document.body.appendChild(progressMsg);
-    
+
     try {
         // Translate all texts in batch
         const translations = await translateBatch(textsToTranslate, lang, 'en');
-        
+
         // Apply translations to elements
         elements.forEach(({ element, key }) => {
             const translation = translations[key];
-            
+
             if (!translation) return;
-            
+
             // Handle different element types
             if (element.tagName === 'INPUT' && element.type === 'text') {
                 element.placeholder = translation;
@@ -964,7 +975,7 @@ async function translatePage(lang) {
                 // For other elements, preserve HTML structure if needed
                 const originalHTML = element.innerHTML;
                 const originalText = element.textContent.trim();
-                
+
                 // If translation contains HTML tags, use innerHTML
                 if (translation.includes('<')) {
                     element.innerHTML = translation;
@@ -978,26 +989,26 @@ async function translatePage(lang) {
                 }
             }
         });
-        
+
         highlightActiveLanguage(lang);
         setLanguageToggleDetails(lang);
-        
+
         // Remove progress message
         const progressMsg = document.getElementById('translation-progress');
         if (progressMsg) {
             progressMsg.remove();
         }
-        
+
         // Reset toggle button
         if (languageToggle) {
             languageToggle.style.opacity = '1';
             languageToggle.style.cursor = 'pointer';
         }
-        
+
         return true;
     } catch (error) {
         console.error('Translation failed:', error);
-        
+
         // Remove progress message
         const progressMsg = document.getElementById('translation-progress');
         if (progressMsg) {
@@ -1005,7 +1016,7 @@ async function translatePage(lang) {
             progressMsg.textContent = 'Translation failed. Please try again.';
             setTimeout(() => progressMsg.remove(), 3000);
         }
-        
+
         if (languageToggle) {
             languageToggle.textContent = 'Error';
             languageToggle.style.opacity = '1';
@@ -1016,14 +1027,14 @@ async function translatePage(lang) {
 }
 
 // Initialize language system
-(function() {
+(function () {
     // Store original texts first
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', storeOriginalTexts);
     } else {
         storeOriginalTexts();
     }
-    
+
     // Wait a bit for DOM to be fully ready
     setTimeout(async () => {
         // Test API connection first
@@ -1032,7 +1043,7 @@ async function translatePage(lang) {
             console.warn('API not connected. Translations may not work.');
             console.warn('Make sure backend is running: python -m uvicorn main:app --reload');
         }
-        
+
         const languageToggle = document.getElementById('languageToggle');
         const languageMenu = document.getElementById('languageMenu');
         availableLanguages = await fetchLanguagesFromAPI();
@@ -1043,16 +1054,16 @@ async function translatePage(lang) {
         if (!languageItems || !languageItems.length) {
             languageItems = document.querySelectorAll('.language-item');
         }
-        
+
         console.log('Language system initialized. Toggle:', !!languageToggle, 'Menu:', !!languageMenu, 'Items:', languageItems.length);
-        
+
         // Load content from admin portal API on page load
         const savedLang = localStorage.getItem('selectedLanguage') || 'en';
-        const page = window.location.pathname.includes('mp3') ? 'mp3' : 
-                    window.location.pathname.includes('mp4') ? 'mp4' : 'home';
+        const page = window.location.pathname.includes('mp3') ? 'mp3' :
+            window.location.pathname.includes('mp4') ? 'mp4' : 'home';
         highlightActiveLanguage(savedLang);
         setLanguageToggleDetails(savedLang);
-        
+
         // Always load content from API (even for English, so admin changes show up)
         // Only for main pages, search/download handle their own content usually (or share home fields?)
         // For now, load home content for search/download so common elements like nav/footer are translated
@@ -1062,61 +1073,61 @@ async function translatePage(lang) {
                 loadFAQs(savedLang);
             }
         });
-        
+
         // Setup dropdown toggle functionality
         if (languageToggle && languageMenu) {
             // Toggle dropdown menu on click
-            languageToggle.addEventListener('click', function(e) {
+            languageToggle.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const isShowing = languageMenu.classList.contains('show');
-                
+
                 // Close all dropdowns first
                 document.querySelectorAll('.language-menu').forEach(menu => {
                     menu.classList.remove('show');
                 });
-                
+
                 // Toggle this dropdown
                 if (!isShowing) {
                     languageMenu.classList.add('show');
                 }
             });
-            
+
             // Close dropdown when clicking outside
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (!languageToggle.contains(e.target) && !languageMenu.contains(e.target)) {
                     languageMenu.classList.remove('show');
                 }
             });
-            
+
             // Handle language selection - translate page when language is clicked
             languageItems.forEach(item => {
-                item.addEventListener('click', async function(e) {
+                item.addEventListener('click', async function (e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     const selectedLang = this.getAttribute('data-lang');
-                    
+
                     if (!selectedLang) {
                         console.error('Language code not found');
                         return;
                     }
-                    
+
                     // Load content from admin portal API for selected language
-                    const page = window.location.pathname.includes('mp3') ? 'mp3' : 
-                                window.location.pathname.includes('mp4') ? 'mp4' : 'home';
+                    const page = window.location.pathname.includes('mp3') ? 'mp3' :
+                        window.location.pathname.includes('mp4') ? 'mp4' : 'home';
                     const contentData = await loadContentFromAPI(selectedLang, page);
-                    
+
                     if (contentData) {
                         // Reload FAQs for the new language (if main page)
                         if (!window.location.pathname.includes('search.html') && !window.location.pathname.includes('download.html')) {
                             await loadFAQs(selectedLang);
                         }
-                        
+
                         // Close dropdown after selection
                         languageMenu.classList.remove('show');
-                        
+
                         // Store selected language in localStorage for persistence
                         localStorage.setItem('selectedLanguage', selectedLang);
                         setLanguageToggleDetails(selectedLang);
@@ -1140,7 +1151,7 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
         if (!response.ok) {
             throw new Error('Failed to fetch content');
         }
-        
+
         const data = await response.json();
         const strings = data.strings || {};
 
@@ -1157,13 +1168,13 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
                 return lang;
             });
         }
-        
+
         // Apply content to all elements with data-i18n attributes
         document.querySelectorAll('[data-i18n]').forEach(element => {
             const key = element.getAttribute('data-i18n');
             if (key && strings[key]) {
                 const value = strings[key];
-                
+
                 // Handle different element types
                 if (element.tagName === 'INPUT' && element.type === 'text') {
                     element.placeholder = value;
@@ -1180,33 +1191,33 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
                 } else {
                     // For headings (H1-H6) and elements that might contain HTML, always check for HTML
                     // Also check for HTML entities and tags
-                    const hasHtml = value.includes('<') || 
-                                   value.includes('&lt;') || 
-                                   value.includes('&gt;') || 
-                                   value.includes('&amp;') ||
-                                   value.includes('&nbsp;') ||
-                                   value.includes('<p>') ||
-                                   value.includes('<br') ||
-                                   value.includes('<strong>') ||
-                                   value.includes('<em>') ||
-                                   value.includes('<span>') ||
-                                   value.includes('<div>');
-                    
+                    const hasHtml = value.includes('<') ||
+                        value.includes('&lt;') ||
+                        value.includes('&gt;') ||
+                        value.includes('&amp;') ||
+                        value.includes('&nbsp;') ||
+                        value.includes('<p>') ||
+                        value.includes('<br') ||
+                        value.includes('<strong>') ||
+                        value.includes('<em>') ||
+                        value.includes('<span>') ||
+                        value.includes('<div>');
+
                     // For heading elements (H1-H6) or elements with class containing 'title', always allow HTML
                     const isHeading = /^H[1-6]$/i.test(element.tagName);
-                    const isTitle = element.classList.contains('title') || 
-                                   element.classList.contains('faq-title') ||
-                                   element.classList.contains('section-title');
-                    
+                    const isTitle = element.classList.contains('title') ||
+                        element.classList.contains('faq-title') ||
+                        element.classList.contains('section-title');
+
                     // Special handling for faqTitle, stepsTitle, heroSubtitle - always use innerHTML to support HTML formatting
                     const isFaqTitle = key === 'faqTitle';
                     const isStepsTitle = key === 'stepsTitle';
                     const isHeroSubtitle = key === 'heroSubtitle';
                     const isStep = key === 'step1' || key === 'step2' || key === 'step3';
                     const isDescription = key === 'description1' || key === 'description2';
-                    const isFeatureDesc = key === 'feature1Desc' || key === 'feature2Desc' || key === 'feature3Desc' || 
-                                         key === 'feature4Desc' || key === 'feature5Desc' || key === 'feature6Desc';
-                    
+                    const isFeatureDesc = key === 'feature1Desc' || key === 'feature2Desc' || key === 'feature3Desc' ||
+                        key === 'feature4Desc' || key === 'feature5Desc' || key === 'feature6Desc';
+
                     // For description and feature description fields in <p> tags, extract content if value contains <p> tags to avoid nesting
                     if ((isDescription || isFeatureDesc) && element.tagName === 'P' && value.trim().match(/^<p[^>]*>/i)) {
                         // Extract inner content from <p> tags, preserving other HTML formatting
@@ -1235,7 +1246,7 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
                 }
             }
         });
-        
+
         // Also handle images by data attribute
         document.querySelectorAll('img[data-image-key]').forEach(img => {
             const key = img.getAttribute('data-image-key');
@@ -1268,7 +1279,7 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
 
         highlightActiveLanguage(langCode);
         setLanguageToggleDetails(langCode);
-        
+
         return data;
     } catch (error) {
         console.error('Error loading content from API:', error);
@@ -1280,47 +1291,47 @@ async function loadContentFromAPI(langCode = 'en', page = 'home') {
 async function loadFAQs(langCode = 'en') {
     const faqContent = document.getElementById('faqContent');
     if (!faqContent) return;
-    
+
     try {
         // Use relative path since we're on the same domain
         const apiUrl = window.location.origin + '/yt_frontend_api.php';
-        const page = window.location.pathname.includes('mp3') ? 'mp3' : 
-                    window.location.pathname.includes('mp4') ? 'mp4' : 'home';
+        const page = window.location.pathname.includes('mp3') ? 'mp3' :
+            window.location.pathname.includes('mp4') ? 'mp4' : 'home';
         const response = await fetch(`${apiUrl}?action=content&page=${page}&lang=${langCode}`);
         if (!response.ok) {
             throw new Error('Failed to fetch FAQs');
         }
-        
+
         const data = await response.json();
         const faqs = data.faqs || [];
-        
+
         if (!faqs || faqs.length === 0) {
             faqContent.innerHTML = '<p class="text-muted">No FAQs available.</p>';
             return;
         }
-        
+
         // Filter out FAQs with empty questions
         const validFaqs = faqs.filter(faq => faq.question && faq.question.trim() !== '');
-        
+
         if (validFaqs.length === 0) {
             faqContent.innerHTML = '<p class="text-muted">No FAQs available.</p>';
             return;
         }
-        
+
         // Render FAQs
         faqContent.innerHTML = validFaqs.map(faq => {
             // Process answer to handle HTML and line breaks
             let answerText = faq.answer;
-            
+
             // Convert <br/> and <br> to newlines for easier processing
             answerText = answerText.replace(/<br\s*\/?>/gi, '\n');
-            
+
             // Split by newlines
             const lines = answerText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-            
+
             let formattedAnswer = '';
             let inList = false;
-            
+
             lines.forEach(line => {
                 // Check if line starts with a number followed by a period (list item)
                 if (line.match(/^\d+\.\s+/)) {
@@ -1342,12 +1353,12 @@ async function loadFAQs(langCode = 'en') {
                     formattedAnswer += `<p>${line}</p>`;
                 }
             });
-            
+
             // Close list if still open
             if (inList) {
                 formattedAnswer += '</ol>';
             }
-            
+
             return `
                 <div class="faq-item">
                     <button class="faq-question-btn" type="button">
@@ -1362,7 +1373,7 @@ async function loadFAQs(langCode = 'en') {
                 </div>
             `;
         }).join('');
-        
+
         // Initialize accordion after rendering
         initFAQAccordion();
     } catch (error) {
@@ -1381,18 +1392,18 @@ function escapeHtml(text) {
 // FAQ Accordion Functionality
 function initFAQAccordion() {
     const faqItems = document.querySelectorAll('.faq-item');
-    
+
     faqItems.forEach(item => {
         const button = item.querySelector('.faq-question-btn');
-        
+
         if (button) {
             // Remove existing listeners to avoid duplicates
             const newButton = button.cloneNode(true);
             button.parentNode.replaceChild(newButton, button);
-            
-            newButton.addEventListener('click', function() {
+
+            newButton.addEventListener('click', function () {
                 const isActive = item.classList.contains('active');
-                
+
                 // Close all other FAQ items
                 faqItems.forEach(otherItem => {
                     if (otherItem !== item) {
@@ -1400,7 +1411,7 @@ function initFAQAccordion() {
                         otherItem.querySelector('.faq-question-btn')?.classList.remove('active');
                     }
                 });
-                
+
                 // Toggle current item
                 if (isActive) {
                     item.classList.remove('active');
